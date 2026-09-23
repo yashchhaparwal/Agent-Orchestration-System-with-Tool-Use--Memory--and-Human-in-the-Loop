@@ -1,0 +1,31 @@
+# Per-agent loop budgets (Rules.md §2.8, Phases.md Phase 7). Every agent loop has four guards:
+# iterations, tokens, cost, wall-clock. `default` applies to any agent not listed. Tuned from the
+# Phase 6 smoke eval: research/analysis loops that thrash past ~12 iterations never recover, the
+# writing loop needs headroom for a letter + a gated send, code loops are short but token-heavy.
+default:
+  max_iterations: 15
+  max_total_tokens: 150000
+  max_wall_seconds: 420
+  max_cost_usd: 1.00        # free tiers bill $0; the cap still catches a runaway loop if prices are configured
+
+agents:
+  research:
+    max_iterations: 12
+    max_total_tokens: 120000
+    max_wall_seconds: 360
+  analysis:
+    max_iterations: 14
+    max_total_tokens: 160000
+    max_wall_seconds: 420
+  writing:
+    max_iterations: 10
+    max_total_tokens: 140000
+    max_wall_seconds: 420
+  code_exec:
+    max_iterations: 8
+    max_total_tokens: 120000
+    max_wall_seconds: 300
+
+# Whole-task cap (all subtasks, all attempts, synthesis). Overrides DEFAULT_TASK_BUDGET_USD when set.
+task:
+  max_cost_usd: 1.00

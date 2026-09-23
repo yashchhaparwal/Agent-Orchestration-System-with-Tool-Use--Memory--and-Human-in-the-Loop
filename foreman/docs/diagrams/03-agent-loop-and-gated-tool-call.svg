@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="880" viewBox="0 0 1600 880" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#475569"/></marker>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E11D48"/></marker>
+    <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#059669"/></marker>
+    <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4F46E5"/></marker>
+  </defs>
+  <rect width="1600" height="880" fill="#FFFFFF"/>
+  <text x="40" y="48" font-size="26" font-weight="700" fill="#0F172A">The Agent Loop — what actually happens inside one specialist node</text>
+  <text x="40" y="76" font-size="15" fill="#475569">An "agent" is just this loop: the model either asks for a tool or gives a final answer. Every tool request passes through a gate before it executes. The result goes back into the conversation.</text>
+
+  <!-- Context box -->
+  <rect x="60" y="130" width="300" height="150" rx="10" fill="#F8FAFC" stroke="#475569" stroke-width="1.5"/>
+  <text x="210" y="156" font-size="14" font-weight="700" text-anchor="middle" fill="#0F172A">1. Build context</text>
+  <text x="76" y="180" font-size="12" fill="#475569">• system prompt (role, rules, output format)</text>
+  <text x="76" y="198" font-size="12" fill="#475569">• the subtask + inputs from working memory</text>
+  <text x="76" y="216" font-size="12" fill="#475569">• tool definitions (name, description, JSON schema)</text>
+  <text x="76" y="234" font-size="12" fill="#475569">• message history so far</text>
+  <text x="76" y="256" font-size="11" fill="#6D28D9" font-style="italic">context engineering = deciding what goes in here</text>
+  <line x1="360" y1="205" x2="420" y2="205" stroke="#475569" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- LLM call -->
+  <rect x="422" y="160" width="220" height="90" rx="10" fill="#EEF2FF" stroke="#4F46E5" stroke-width="2"/>
+  <text x="532" y="190" font-size="15" font-weight="700" text-anchor="middle" fill="#312E81">2. LLM call</text>
+  <text x="532" y="212" font-size="12" text-anchor="middle" fill="#475569">messages + tools → response</text>
+  <text x="532" y="232" font-size="11" text-anchor="middle" fill="#4F46E5" font-style="italic">one OTel span: tokens, cost, latency</text>
+  <line x1="642" y1="205" x2="700" y2="205" stroke="#475569" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- Decision -->
+  <polygon points="780,150 870,205 780,260 690,205" fill="#FFFFFF" stroke="#475569" stroke-width="1.5"/>
+  <text x="780" y="200" font-size="12" font-weight="600" text-anchor="middle" fill="#0F172A">stop_reason?</text>
+  <text x="780" y="218" font-size="10" text-anchor="middle" fill="#475569">tool_use  |  end_turn</text>
+
+  <!-- final answer path -->
+  <line x1="870" y1="205" x2="960" y2="205" stroke="#059669" stroke-width="1.5" marker-end="url(#ag)"/>
+  <text x="884" y="195" font-size="11" fill="#047857">end_turn</text>
+  <rect x="962" y="160" width="260" height="90" rx="10" fill="#ECFDF5" stroke="#059669" stroke-width="2"/>
+  <text x="1092" y="190" font-size="15" font-weight="700" text-anchor="middle" fill="#065F46">6. Final answer</text>
+  <text x="1092" y="212" font-size="12" text-anchor="middle" fill="#475569">validated against a Pydantic schema</text>
+  <text x="1092" y="232" font-size="11" text-anchor="middle" fill="#059669" font-style="italic">→ written to state → reviewer</text>
+
+  <!-- tool_use path down -->
+  <line x1="780" y1="260" x2="780" y2="320" stroke="#475569" stroke-width="1.5" marker-end="url(#a)"/>
+  <text x="790" y="295" font-size="11" fill="#475569">tool_use {name, input}</text>
+
+  <!-- Gate -->
+  <rect x="640" y="322" width="280" height="96" rx="10" fill="#FFF1F2" stroke="#E11D48" stroke-width="2"/>
+  <text x="780" y="350" font-size="15" font-weight="700" text-anchor="middle" fill="#BE123C">3. Permission gate</text>
+  <text x="780" y="372" font-size="12" text-anchor="middle" fill="#475569">classify(tool, input) → safe · risky · destructive</text>
+  <text x="780" y="390" font-size="12" text-anchor="middle" fill="#475569">check registry: is this agent allowed this tool?</text>
+  <text x="780" y="408" font-size="11" text-anchor="middle" fill="#BE123C" font-style="italic">rate limit · schema validate input · log</text>
+
+  <!-- three outcomes -->
+  <line x1="700" y1="418" x2="540" y2="480" stroke="#059669" stroke-width="1.5" marker-end="url(#ag)"/>
+  <text x="560" y="445" font-size="11" fill="#047857">safe → allow</text>
+  <line x1="780" y1="418" x2="800" y2="480" stroke="#D97706" stroke-width="1.5" marker-end="url(#a)"/>
+  <text x="800" y="452" font-size="11" fill="#B45309">risky → needs approval</text>
+  <line x1="860" y1="418" x2="1040" y2="480" stroke="#E11D48" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="950" y="445" font-size="11" fill="#BE123C">destructive / not allowed → block</text>
+
+  <!-- Execute -->
+  <rect x="400" y="482" width="260" height="96" rx="10" fill="#F1F5F9" stroke="#475569" stroke-width="2"/>
+  <text x="530" y="510" font-size="15" font-weight="700" text-anchor="middle" fill="#0F172A">4. Execute via MCP server</text>
+  <text x="530" y="532" font-size="12" text-anchor="middle" fill="#475569">client.call_tool(name, input) + timeout</text>
+  <text x="530" y="550" font-size="12" text-anchor="middle" fill="#475569">retries on transient errors only</text>
+  <text x="530" y="568" font-size="11" text-anchor="middle" fill="#475569" font-style="italic">one OTel span: args, result size, latency, ok/fail</text>
+
+  <!-- Approval pause -->
+  <rect x="690" y="482" width="220" height="96" rx="10" fill="#FFFBEB" stroke="#D97706" stroke-width="2"/>
+  <text x="800" y="510" font-size="14" font-weight="700" text-anchor="middle" fill="#92400E">⏸ interrupt()</text>
+  <text x="800" y="532" font-size="12" text-anchor="middle" fill="#475569">queue for human; graph</text>
+  <text x="800" y="550" font-size="12" text-anchor="middle" fill="#475569">checkpointed and paused</text>
+  <text x="800" y="568" font-size="11" text-anchor="middle" fill="#B45309" font-style="italic">wait for a decision</text>
+  <line x1="690" y1="545" x2="662" y2="545" stroke="#059669" stroke-width="1.5" marker-end="url(#ag)"/>
+  <text x="675" y="476" font-size="10" text-anchor="middle" fill="#047857">approved ↓</text>
+  <line x1="910" y1="545" x2="938" y2="545" stroke="#E11D48" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="925" y="476" font-size="10" text-anchor="middle" fill="#BE123C">rejected ↓</text>
+
+  <!-- Blocked -->
+  <rect x="940" y="482" width="240" height="96" rx="10" fill="#FFF1F2" stroke="#E11D48" stroke-width="2"/>
+  <text x="1060" y="510" font-size="14" font-weight="700" text-anchor="middle" fill="#BE123C">Denied</text>
+  <text x="1060" y="532" font-size="12" text-anchor="middle" fill="#475569">no execution; the model gets a</text>
+  <text x="1060" y="550" font-size="12" text-anchor="middle" fill="#475569">tool_result saying why, and</text>
+  <text x="1060" y="568" font-size="12" text-anchor="middle" fill="#475569">must choose another approach</text>
+
+  <!-- Tool result -->
+  <rect x="400" y="620" width="780" height="80" rx="10" fill="#F8FAFC" stroke="#475569" stroke-width="1.5"/>
+  <text x="790" y="648" font-size="15" font-weight="700" text-anchor="middle" fill="#0F172A">5. Append tool_result to the message history</text>
+  <text x="790" y="670" font-size="12" text-anchor="middle" fill="#475569">{ tool_use_id, content: "...result text or error...", is_error } — truncate large outputs, keep the structure typed</text>
+  <text x="790" y="690" font-size="11" text-anchor="middle" fill="#BE123C" font-style="italic">tool results are UNTRUSTED DATA: a web page or file can contain "ignore your instructions and..." — never let it override the system prompt</text>
+  <line x1="530" y1="578" x2="530" y2="618" stroke="#475569" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="1060" y1="578" x2="1060" y2="618" stroke="#475569" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- loop back -->
+  <path d="M 400 660 C 380 660, 380 300, 420 216" fill="none" stroke="#4F46E5" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#ab)"/>
+  <text x="372" y="440" font-size="12" font-weight="600" text-anchor="end" fill="#4F46E5">loop until end_turn</text>
+  <text x="372" y="458" font-size="11" text-anchor="end" fill="#4F46E5">or max_iterations (e.g. 15)</text>
+  <text x="372" y="474" font-size="11" text-anchor="end" fill="#4F46E5">or token / cost budget hit</text>
+
+  <!-- Example exchange -->
+  <rect x="1250" y="130" width="310" height="570" rx="10" fill="#0F172A"/>
+  <text x="1266" y="156" font-size="12" font-weight="700" fill="#94A3B8">EXAMPLE — three turns of the loop</text>
+  <text x="1266" y="186" font-size="11" fill="#7DD3FC" font-family="Consolas, monospace">assistant:</text>
+  <text x="1266" y="202" font-size="11" fill="#E2E8F0" font-family="Consolas, monospace">  tool_use {</text>
+  <text x="1266" y="218" font-size="11" fill="#E2E8F0" font-family="Consolas, monospace">    name: "search_docs",</text>
+  <text x="1266" y="234" font-size="11" fill="#E2E8F0" font-family="Consolas, monospace">    input: {query: "refund</text>
+  <text x="1266" y="250" font-size="11" fill="#E2E8F0" font-family="Consolas, monospace">      policy 2026"} }</text>
+  <text x="1266" y="274" font-size="11" fill="#FDA4AF" font-family="Consolas, monospace">gate: safe → allow</text>
+  <text x="1266" y="298" font-size="11" fill="#7DD3FC" font-family="Consolas, monospace">user:</text>
+  <text x="1266" y="314" font-size="11" fill="#E2E8F0" font-family="Consolas, monospace">  tool_result {</text>
+  <text x="1266" y="330" font-size="11" fill="#E2E8F0" font-family="Consolas, monospace">    content: "[1] Refunds are</text>
+  <text x="1266" y="346" font-size="11" fill="#E2E8F0" font-family="Consolas, monospace">    issued within 14 days..." }</text>
+  <text x="1266" y="376" font-size="11" fill="#7DD3FC" font-family="Consolas, monospace">assistant:</text>
+  <text x="1266" y="392" font-size="11" fill="#E2E8F0" font-family="Consolas, monospace">  tool_use {</text>
+  <text x="1266" y="408" font-size="11" fill="#E2E8F0" font-family="Consolas, monospace">    name: "send_email", ... }</text>
+  <text x="1266" y="432" font-size="11" fill="#FDA4AF" font-family="Consolas, monospace">gate: destructive → ⏸ approval</text>
+  <text x="1266" y="448" font-size="11" fill="#FDA4AF" font-family="Consolas, monospace">human: rejected ("draft only")</text>
+  <text x="1266" y="472" font-size="11" fill="#7DD3FC" font-family="Consolas, monospace">user:</text>
+  <text x="1266" y="488" font-size="11" fill="#E2E8F0" font-family="Consolas, monospace">  tool_result { is_error: true,</text>
+  <text x="1266" y="504" font-size="11" fill="#E2E8F0" font-family="Consolas, monospace">    content: "Denied by reviewer:</text>
+  <text x="1266" y="520" font-size="11" fill="#E2E8F0" font-family="Consolas, monospace">    produce a draft instead" }</text>
+  <text x="1266" y="550" font-size="11" fill="#7DD3FC" font-family="Consolas, monospace">assistant:</text>
+  <text x="1266" y="566" font-size="11" fill="#E2E8F0" font-family="Consolas, monospace">  text: "Draft reply: ..."</text>
+  <text x="1266" y="582" font-size="11" fill="#E2E8F0" font-family="Consolas, monospace">  stop_reason: end_turn</text>
+  <text x="1266" y="612" font-size="11" fill="#6EE7B7" font-family="Consolas, monospace">→ parsed into SubtaskResult</text>
+  <text x="1266" y="628" font-size="11" fill="#6EE7B7" font-family="Consolas, monospace">→ handed to reviewer node</text>
+  <text x="1266" y="660" font-size="10" fill="#94A3B8">3 LLM calls · 2 tool calls · 1 human</text>
+  <text x="1266" y="676" font-size="10" fill="#94A3B8">decision · 6 spans in the trace</text>
+
+  <!-- footer -->
+  <rect x="60" y="740" width="1500" height="110" rx="10" fill="#FFFFFF" stroke="#E2E8F0"/>
+  <text x="80" y="766" font-size="12" font-weight="700" fill="#334155">WHY THIS MATTERS IN INTERVIEWS</text>
+  <text x="80" y="788" font-size="12" fill="#475569">• The loop is the whole "agent". Frameworks (LangGraph, the SDK tool runner) wrap it; you should be able to write it raw in ~40 lines and explain every guard: max iterations, budget, timeouts, schema validation.</text>
+  <text x="80" y="808" font-size="12" fill="#475569">• The gate is a native module you own — allow-list, risk class, a small classifier — sitting inside your own loop. Fail closed, tested, ~150 lines. That is the portfolio story.</text>
+  <text x="80" y="828" font-size="12" fill="#475569">• Treating tool results as untrusted input (prompt injection) is the single most-asked agent security question. Have a concrete mitigation ready: typed results, quoting, no instruction-following from tool output.</text>
+</svg>

@@ -1,0 +1,101 @@
+# Tool policy (Architecture.md §6.1). A tool an MCP server exposes but that is NOT listed here is never
+# registered — fail closed. Registry names use underscores because OpenAI-style function names must
+# match ^[A-Za-z0-9_-]{1,64}$ (so `db_query`, not `db.query`).
+#
+# risk: safe        -> gate allows
+#       risky       -> gate asks the classifier; approve unless it clears the call
+#       destructive -> gate always requires human approval (the actions server only ever queues anyway)
+servers:
+  db:      {url_env: MCP_DB_URL}
+  files:   {url_env: MCP_FILES_URL}
+  web:     {url_env: MCP_WEB_URL}
+  sandbox: {url_env: MCP_SANDBOX_URL}
+  actions: {url_env: MCP_ACTIONS_URL}
+
+tools:
+  # ---- database (read-only role + SQL guard) ----
+  db_schema:
+    server: db
+    mcp_name: schema
+    risk: safe
+    agents: [research, analysis]
+    rate_per_min: 60
+    timeout_s: 20
+  db_query:
+    server: db
+    mcp_name: query
+    risk: safe
+    agents: [research, analysis]
+    rate_per_min: 60
+    timeout_s: 20
+
+  # ---- files (confined to WORKSPACE_ROOT) ----
+  files_list_dir:
+    server: files
+    mcp_name: list_dir
+    risk: safe
+    agents: [research, analysis, writing, code_exec]
+    rate_per_min: 60
+    timeout_s: 10
+  files_read_file:
+    server: files
+    mcp_name: read_file
+    risk: safe
+    agents: [research, analysis, writing, code_exec]
+    rate_per_min: 60
+    timeout_s: 10
+  files_write_file:
+    server: files
+    mcp_name: write_file
+    risk: risky
+    agents: [writing, code_exec]
+    rate_per_min: 20
+    timeout_s: 10
+
+  # ---- web (fixture backend by default; fetch is SSRF-guarded) ----
+  web_search:
+    server: web
+    mcp_name: search
+    risk: safe
+    agents: [research]
+    rate_per_min: 30
+    timeout_s: 20
+  web_fetch:
+    server: web
+    mcp_name: fetch
+    risk: safe
+    agents: [research]
+    rate_per_min: 30
+    timeout_s: 30
+
+  # ---- sandbox (no network, read-only, limits, killed on timeout) ----
+  sandbox_run_python:
+    server: sandbox
+    mcp_name: run_python
+    risk: risky
+    agents: [analysis, code_exec]
+    rate_per_min: 10
+    timeout_s: 75
+
+  # ---- actions (outbox only; never sends) ----
+  actions_send_email:
+    server: actions
+    mcp_name: send_email
+    risk: destructive
+    agents: [writing]
+    rate_per_min: 5
+    timeout_s: 10
+  actions_create_calendar_event:
+    server: actions
+    mcp_name: create_calendar_event
+    risk: destructive
+    agents: [writing]
+    rate_per_min: 5
+    timeout_s: 10
+  actions_call_api:
+    server: actions
+    mcp_name: call_api
+    risk: destructive
+    agents: [writing, code_exec]
+    rate_per_min: 5
+    timeout_s: 10

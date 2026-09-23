@@ -1,0 +1,109 @@
+# Foreman — model roles and fallback chains (Architecture.md §10). $0 by default.
+# Every chain lists (provider, model) in order; the client moves to the next entry on 429 / 5xx / timeout /
+# a schema failure twice, and backs off (3 s, 8 s, 20 s) when every entry is rate-limited at once.
+# Model ids were confirmed against each provider's /models endpoint on Day 0 (27 Aug 2026) — free lineups
+# rotate, so re-run `make smoke-all` whenever something starts failing.
+#
+# Lesson from the first live run (Phase 2): Groq's free tier caps openai/gpt-oss-120b at 8,000 tokens per
+# MINUTE, and a specialist's tool loop reaches ~9–10k tokens per request once a document and the schema are
+# in the history — so Groq can never serve a specialist call and sits only in short-prompt roles. Mistral's
+# free tier rate-limits parallel bursts, hence `concurrency: 1`.
+
+providers:
+  mistral:
+    base_url_env: MISTRAL_BASE_URL
+    api_key_env: MISTRAL_API_KEY
+    free_tier: true
+    limits: {concurrency: 1}
+    notes: "La Plateforme free tier, ~1B tokens/month; function calling on all chat models; 429s on bursts"
+  groq:
+    base_url_env: GROQ_BASE_URL
+    api_key_env: GROQ_API_KEY
+    free_tier: true
+    supports_effort: true
+    limits: {concurrency: 2, rpm: 30, rpd: 1000, tpm: 8000}
+    notes: "8k tokens/minute on the free tier -> short prompts only. Current text models: openai/gpt-oss-120b, openai/gpt-oss-20b, qwen/qwen3.8-27b"
+  gemini:
+    base_url_env: GEMINI_BASE_URL
+    api_key_env: GEMINI_API_KEY
+    free_tier: true
+    limits: {concurrency: 1, rpm: 10}
+    notes: "Google AI Studio via the OpenAI-compatible endpoint; verified ids: gemini-3.5-flash, gemini-3.5-flash-lite; embeddings: gemini-embedding-2; JSON mode is slow (~13 s)"
+  ollama:
+    base_url_env: OLLAMA_BASE_URL
+    api_key_env: null
+    free_tier: true
+    limits: {concurrency: 1}
+    notes: "local, CPU only"
+  tokenrouter_free:
+    base_url_env: TOKENROUTER_BASE_URL
+    api_key_env: TOKENROUTER_FREE_API_KEY
+    free_tier: true
+    verified: true
+    limits: {concurrency: 1}
+    notes: "tokenrouter.com (https://api.tokenrouter.com/v1). Free key can call qwen/qwen3.8-max-free only; deepseek-v4-pro-0813-free = no access, nemotron:free = needs credit"
+  tokenrouter:
+    base_url_env: TOKENROUTER_BASE_URL
+    api_key_env: TOKENROUTER_API_KEY
+    paid: true
+  anthropic:
+    sdk: anthropic
+    api_key_env: ANTHROPIC_API_KEY
+    paid: true
+  explabs:
+    base_url_env: EXPLABS_BASE_URL
+    api_key_env: EXPLABS_API_KEY
+    paid: true            # credits, not a free tier — entries below are dropped unless ENABLE_PAID_PROVIDERS=true
+    limits: {concurrency: 2}
+    notes: "Experiential Labs (api.experientiallabs.ai/v1), OpenAI-compatible; verified id: gpt-6-astra. Bundled tier: 200k input tokens/HOUR (429 -> falls through to the free chains, resumes next hour). Route rejects `temperature` (provider drops it and retries); tool messages must not carry `name`."
+
+# Paid entries in a chain are dropped by the loader when ENABLE_PAID_PROVIDERS=false, so a clean
+# clone with no paid key still runs the exact free chains below ($0 default, Rules.md §6).
+roles:
+  supervisor:                       # plan + synthesise: strongest reasoning, reliable JSON
+    chain:
+      - {provider: explabs,          model: gpt-6-astra}               # paid opt-in; first when enabled
+      - {provider: mistral,          model: mistral-medium-latest}     # passed every Day-0 check in <1 s
+      - {provider: groq,             model: openai/gpt-oss-120b}       # planning prompts are short: fast and reliable here; synthesis may 413 (8k TPM) and fall through
+      - {provider: tokenrouter_free, model: qwen/qwen3.8-max-free}     # strongest free option; capacity not guaranteed (503 cold), ~100 s calls
+      - {provider: gemini,           model: gemini-3.5-flash}          # tiny free daily quota
+    effort: high
+    # mistral-large-latest timed out / 5xx'd on every Day-0 call (free-tier overload). Re-test with `make smoke`
+    # and move it to the front of this chain if it recovers. Supervisor bake-off (medium vs qwen3.8-max) in Phase 6.
+  specialist:                       # tool loops: most of the volume; every entry must take >10k-token requests
+    chain:
+      - {provider: explabs,          model: gpt-6-astra}               # paid opt-in; no free-tier TPM caps
+      - {provider: mistral,          model: mistral-medium-latest}
+      - {provider: tokenrouter_free, model: qwen/qwen3.8-max-free}
+      - {provider: gemini,           model: gemini-3.5-flash}
+      - {provider: groq,             model: openai/gpt-oss-120b}   # last resort: 8k TPM, so only short prompts get through (413 falls through)
+    effort: medium
+  reviewer:                         # must be a different family from supervisor and specialists
+    chain:
+      - {provider: gemini,  model: gemini-3.5-flash}       # 2.5-flash / flash-latest are closed to new users; 3.6/3.7-flash also exist
+      - {provider: groq,    model: qwen/qwen3.8-27b}       # review prompts are short enough for Groq's TPM cap
+    effort: high
+  cheap:                            # memory extractor, gate classifier, summaries (short prompts)
+    chain:
+      - {provider: groq,    model: openai/gpt-oss-20b}
+      - {provider: mistral, model: ministral-14b-latest}
+    effort: low
+  embedding:
+    chain:
+      - {provider: ollama,  model: nomic-embed-text}
+      - {provider: gemini,  model: gemini-embedding-2}
+
+dev:
+  offline_model: {provider: ollama, model: qwen3:8b}   # unit tests use fixtures; this is for manual offline runs
+
+# Day-0 result for the TokenRouter free key: only qwen/qwen3.8-max-free is callable.
+# deepseek/deepseek-v4-pro-0813-free -> 403 "no access"; nvidia/nemotron-3-nano…:free -> 403 "insufficient credit".
+
+# Not loaded unless ENABLE_PAID_PROVIDERS=true (Rules.md §6). Reference only.
+paid_optional:
+  supervisor: {provider: anthropic, model: claude-opus-5,   effort: xhigh}
+  specialist: {provider: anthropic, model: claude-sonnet-5, effort: medium}
+
+# List prices for the cost ledger ("what this would have cost"). Free tiers bill $0; filled in Phase 1
+# from each provider's pricing page so the dashboard can show avoided cost.
+list_prices_usd_per_mtok: {}

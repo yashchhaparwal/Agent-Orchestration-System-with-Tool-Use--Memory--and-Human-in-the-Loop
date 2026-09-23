@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1060" viewBox="0 0 1600 1060" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#475569"/></marker>
+    <marker id="arrowV" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/></marker>
+    <marker id="arrowR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E11D48"/></marker>
+  </defs>
+  <rect width="1600" height="1060" fill="#FFFFFF"/>
+  <text x="40" y="48" font-size="26" font-weight="700" fill="#0F172A">Project 15 — Agent Orchestration System · Architecture Overview</text>
+  <text x="40" y="76" font-size="15" fill="#475569">A supervisor plans, specialists act through gated MCP tools, a reviewer checks, humans approve when confidence is low — and every decision is traced.</text>
+
+  <!-- Client + API -->
+  <rect x="660" y="100" width="280" height="54" rx="10" fill="#F8FAFC" stroke="#94A3B8" stroke-width="1.5"/>
+  <text x="800" y="133" font-size="16" font-weight="600" text-anchor="middle" fill="#0F172A">User / Client application</text>
+  <line x1="800" y1="154" x2="800" y2="188" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="600" y="190" width="400" height="64" rx="10" fill="#F8FAFC" stroke="#94A3B8" stroke-width="1.5"/>
+  <text x="800" y="216" font-size="16" font-weight="600" text-anchor="middle" fill="#0F172A">Orchestration API (FastAPI)</text>
+  <text x="800" y="238" font-size="13" text-anchor="middle" fill="#475569">POST /tasks · GET /tasks/{id} · GET /approvals · POST /approvals/{id}/decide</text>
+  <line x1="800" y1="254" x2="800" y2="334" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- MEMORY panel -->
+  <rect x="40" y="290" width="340" height="440" rx="12" fill="#FAF5FF" stroke="#C4B5FD" stroke-width="1.5"/>
+  <text x="60" y="318" font-size="14" font-weight="700" fill="#6D28D9" letter-spacing="1">MEMORY</text>
+  <rect x="60" y="334" width="300" height="96" rx="8" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.5"/>
+  <text x="76" y="357" font-size="14" font-weight="600" fill="#0F172A">Working memory — Redis</text>
+  <text x="76" y="377" font-size="12" fill="#475569">Scoped to one task: the plan, finished</text>
+  <text x="76" y="394" font-size="12" fill="#475569">subtask outputs, intermediate results, errors.</text>
+  <text x="76" y="411" font-size="12" fill="#475569">Cleared when the task completes.</text>
+  <rect x="60" y="446" width="300" height="96" rx="8" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.5"/>
+  <text x="76" y="469" font-size="14" font-weight="600" fill="#0F172A">Persistent state — PostgreSQL</text>
+  <text x="76" y="489" font-size="12" fill="#475569">Tasks, graph checkpoints (resume after pause),</text>
+  <text x="76" y="506" font-size="12" fill="#475569">approval records, audit log, cost ledger.</text>
+  <text x="76" y="523" font-size="12" fill="#475569">Never cleared.</text>
+  <rect x="60" y="558" width="300" height="150" rx="8" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.5"/>
+  <text x="76" y="581" font-size="14" font-weight="600" fill="#0F172A">Long-term semantic memory — ChromaDB</text>
+  <text x="76" y="601" font-size="12" fill="#475569">After each task: extract lessons (what was asked,</text>
+  <text x="76" y="618" font-size="12" fill="#475569">which approach worked, tools used, user prefs),</text>
+  <text x="76" y="635" font-size="12" fill="#475569">embed them, store with metadata.</text>
+  <text x="76" y="655" font-size="12" fill="#475569">Before each plan: query top-k similar past tasks</text>
+  <text x="76" y="672" font-size="12" fill="#475569">and inject into the planning prompt.</text>
+  <text x="76" y="692" font-size="12" fill="#6D28D9" font-style="italic">Importance scoring · consolidation · expiry · delete API</text>
+
+  <!-- AGENT GRAPH panel -->
+  <rect x="400" y="290" width="790" height="440" rx="12" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="420" y="318" font-size="14" font-weight="700" fill="#334155" letter-spacing="1">AGENT GRAPH — LangGraph state machine (checkpointed after every node)</text>
+  <!-- Supervisor -->
+  <rect x="640" y="336" width="320" height="82" rx="10" fill="#EEF2FF" stroke="#4F46E5" stroke-width="2"/>
+  <text x="800" y="361" font-size="16" font-weight="700" text-anchor="middle" fill="#312E81">Supervisor Agent (planner)</text>
+  <text x="800" y="381" font-size="12" text-anchor="middle" fill="#475569">Decomposes the task into an ordered plan of subtasks</text>
+  <text x="800" y="398" font-size="12" text-anchor="middle" fill="#475569">with dependencies; assigns each to a specialist.</text>
+  <!-- Specialists -->
+  <rect x="420" y="462" width="170" height="78" rx="10" fill="#ECFEFF" stroke="#0891B2" stroke-width="2"/>
+  <text x="505" y="490" font-size="14" font-weight="700" text-anchor="middle" fill="#155E75">Research</text>
+  <text x="505" y="510" font-size="11" text-anchor="middle" fill="#475569">web search · doc read</text>
+  <text x="505" y="526" font-size="11" text-anchor="middle" fill="#475569">retrieval (Project 6)</text>
+  <rect x="608" y="462" width="170" height="78" rx="10" fill="#ECFEFF" stroke="#0891B2" stroke-width="2"/>
+  <text x="693" y="490" font-size="14" font-weight="700" text-anchor="middle" fill="#155E75">Data Analysis</text>
+  <text x="693" y="510" font-size="11" text-anchor="middle" fill="#475569">DB query · code sandbox</text>
+  <text x="693" y="526" font-size="11" text-anchor="middle" fill="#475569">tables, stats, charts</text>
+  <rect x="796" y="462" width="170" height="78" rx="10" fill="#ECFEFF" stroke="#0891B2" stroke-width="2"/>
+  <text x="881" y="490" font-size="14" font-weight="700" text-anchor="middle" fill="#155E75">Writing</text>
+  <text x="881" y="510" font-size="11" text-anchor="middle" fill="#475569">drafts, summaries,</text>
+  <text x="881" y="526" font-size="11" text-anchor="middle" fill="#475569">letters, reports</text>
+  <rect x="984" y="462" width="186" height="78" rx="10" fill="#ECFEFF" stroke="#0891B2" stroke-width="2"/>
+  <text x="1077" y="490" font-size="14" font-weight="700" text-anchor="middle" fill="#155E75">Code Execution</text>
+  <text x="1077" y="510" font-size="11" text-anchor="middle" fill="#475569">sandboxed Python/JS</text>
+  <text x="1077" y="526" font-size="11" text-anchor="middle" fill="#475569">file read / write</text>
+  <!-- fan-out arrows -->
+  <line x1="760" y1="418" x2="520" y2="460" stroke="#4F46E5" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="780" y1="418" x2="700" y2="460" stroke="#4F46E5" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="820" y1="418" x2="875" y2="460" stroke="#4F46E5" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="840" y1="418" x2="1060" y2="460" stroke="#4F46E5" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="930" y="440" font-size="11" fill="#4F46E5">delegate subtasks (parallel when independent)</text>
+  <!-- Reviewer -->
+  <rect x="560" y="592" width="360" height="72" rx="10" fill="#FFFBEB" stroke="#D97706" stroke-width="2"/>
+  <text x="740" y="617" font-size="15" font-weight="700" text-anchor="middle" fill="#92400E">Reviewer Agent</text>
+  <text x="740" y="637" font-size="12" text-anchor="middle" fill="#475569">Checks each specialist output against the subtask spec.</text>
+  <text x="740" y="653" font-size="12" text-anchor="middle" fill="#475569">Accept → synthesis · Reject → back with feedback (max 2)</text>
+  <!-- fan-in arrows -->
+  <line x1="505" y1="540" x2="660" y2="590" stroke="#0891B2" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="693" y1="540" x2="720" y2="590" stroke="#0891B2" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="881" y1="540" x2="790" y2="590" stroke="#0891B2" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="1077" y1="540" x2="880" y2="590" stroke="#0891B2" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- Synthesis -->
+  <rect x="960" y="592" width="210" height="72" rx="10" fill="#EEF2FF" stroke="#4F46E5" stroke-width="2"/>
+  <text x="1065" y="617" font-size="15" font-weight="700" text-anchor="middle" fill="#312E81">Synthesis</text>
+  <text x="1065" y="637" font-size="12" text-anchor="middle" fill="#475569">Supervisor merges accepted</text>
+  <text x="1065" y="653" font-size="12" text-anchor="middle" fill="#475569">outputs → final deliverable</text>
+  <line x1="920" y1="628" x2="958" y2="628" stroke="#D97706" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- rejection loop -->
+  <path d="M 600 664 C 560 700, 440 700, 440 560" fill="none" stroke="#D97706" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+  <text x="430" y="712" font-size="11" fill="#B45309">rejected → retry specialist with feedback</text>
+  <!-- memory arrows -->
+  <path d="M 360 600 L 408 600 L 408 378 L 638 378" fill="none" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrowV)"/>
+  <text x="416" y="370" font-size="11" fill="#6D28D9">recall similar past tasks before planning</text>
+  <line x1="640" y1="404" x2="362" y2="404" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrowV)"/>
+  <text x="416" y="422" font-size="11" fill="#6D28D9">write plan + outputs (working memory)</text>
+
+  <!-- HITL panel -->
+  <rect x="1210" y="290" width="350" height="206" rx="12" fill="#FFF1F2" stroke="#FDA4AF" stroke-width="1.5"/>
+  <text x="1230" y="318" font-size="14" font-weight="700" fill="#BE123C" letter-spacing="1">HUMAN-IN-THE-LOOP</text>
+  <rect x="1230" y="334" width="310" height="66" rx="8" fill="#FFFFFF" stroke="#E11D48" stroke-width="1.5"/>
+  <text x="1246" y="357" font-size="14" font-weight="600" fill="#0F172A">Escalation queue</text>
+  <text x="1246" y="376" font-size="12" fill="#475569">Graph pauses (interrupt), state is checkpointed,</text>
+  <text x="1246" y="392" font-size="12" fill="#475569">full context packaged for a reviewer.</text>
+  <rect x="1230" y="412" width="310" height="66" rx="8" fill="#FFFFFF" stroke="#E11D48" stroke-width="1.5"/>
+  <text x="1246" y="435" font-size="14" font-weight="600" fill="#0F172A">Human review UI</text>
+  <text x="1246" y="454" font-size="12" fill="#475569">approve · modify · reject · take over</text>
+  <text x="1246" y="470" font-size="12" fill="#475569">+ chat panel to question the agent first</text>
+  <line x1="1190" y1="380" x2="1228" y2="366" stroke="#E11D48" stroke-width="1.5" marker-end="url(#arrowR)"/>
+  <text x="968" y="330" font-size="10" fill="#BE123C">escalate: low confidence · sensitive action · repeated failure</text>
+  <path d="M 1230 445 C 1200 445, 1200 560, 1172 600" fill="none" stroke="#E11D48" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrowR)"/>
+  <text x="1120" y="578" font-size="10" fill="#BE123C">resume with decision</text>
+
+  <!-- OBSERVABILITY panel -->
+  <rect x="1210" y="516" width="350" height="214" rx="12" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1.5"/>
+  <text x="1230" y="544" font-size="14" font-weight="700" fill="#047857" letter-spacing="1">OBSERVABILITY</text>
+  <rect x="1230" y="560" width="310" height="70" rx="8" fill="#FFFFFF" stroke="#059669" stroke-width="1.5"/>
+  <text x="1246" y="583" font-size="14" font-weight="600" fill="#0F172A">OpenTelemetry spans</text>
+  <text x="1246" y="602" font-size="12" fill="#475569">One span per LLM call, tool call, review, memory</text>
+  <text x="1246" y="618" font-size="12" fill="#475569">read, escalation — with tokens, cost, latency.</text>
+  <rect x="1230" y="642" width="310" height="70" rx="8" fill="#FFFFFF" stroke="#059669" stroke-width="1.5"/>
+  <text x="1246" y="665" font-size="14" font-weight="600" fill="#0F172A">Trace explorer + replay</text>
+  <text x="1246" y="684" font-size="12" fill="#475569">Tree view of every decision; click to see prompt</text>
+  <text x="1246" y="700" font-size="12" fill="#475569">and response; replay with modified inputs.</text>
+
+  <!-- TOOL LAYER panel -->
+  <rect x="40" y="750" width="1520" height="290" rx="12" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="60" y="778" font-size="14" font-weight="700" fill="#334155" letter-spacing="1">TOOL LAYER</text>
+  <!-- Gate -->
+  <rect x="400" y="792" width="790" height="54" rx="8" fill="#FFF1F2" stroke="#E11D48" stroke-width="2"/>
+  <text x="795" y="815" font-size="15" font-weight="700" text-anchor="middle" fill="#BE123C">Permission Gate</text>
+  <text x="795" y="835" font-size="12" text-anchor="middle" fill="#475569">Every tool call is classified safe / risky / destructive → auto-allow · require human approval · block. Logged.</text>
+  <line x1="795" y1="730" x2="795" y2="790" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="808" y="766" font-size="11" fill="#475569">specialists call tools</text>
+  <!-- Registry -->
+  <rect x="60" y="880" width="310" height="130" rx="8" fill="#FFFFFF" stroke="#475569" stroke-width="1.5"/>
+  <text x="76" y="905" font-size="14" font-weight="600" fill="#0F172A">Tool Registry</text>
+  <text x="76" y="926" font-size="12" fill="#475569">name · description · input/output JSON schema</text>
+  <text x="76" y="943" font-size="12" fill="#475569">which specialists may use it · rate limit</text>
+  <text x="76" y="960" font-size="12" fill="#475569">risk class · timeout · retry policy</text>
+  <text x="76" y="984" font-size="12" fill="#334155" font-style="italic">Every invocation logged: inputs, outputs, latency, ok/fail</text>
+  <!-- MCP servers -->
+  <rect x="400" y="880" width="196" height="130" rx="8" fill="#FFFFFF" stroke="#475569" stroke-width="1.5"/>
+  <text x="498" y="908" font-size="14" font-weight="600" text-anchor="middle" fill="#0F172A">Web Search MCP</text>
+  <text x="498" y="930" font-size="12" text-anchor="middle" fill="#475569">search(query) → results</text>
+  <text x="498" y="948" font-size="12" text-anchor="middle" fill="#475569">fetch(url) → text</text>
+  <text x="498" y="978" font-size="11" text-anchor="middle" fill="#059669">risk: safe</text>
+  <rect x="612" y="880" width="196" height="130" rx="8" fill="#FFFFFF" stroke="#475569" stroke-width="1.5"/>
+  <text x="710" y="908" font-size="14" font-weight="600" text-anchor="middle" fill="#0F172A">File I/O MCP</text>
+  <text x="710" y="930" font-size="12" text-anchor="middle" fill="#475569">read(path) · list(dir)</text>
+  <text x="710" y="948" font-size="12" text-anchor="middle" fill="#475569">write(path, content)</text>
+  <text x="710" y="978" font-size="11" text-anchor="middle" fill="#B45309">risk: read safe · write risky</text>
+  <rect x="824" y="880" width="196" height="130" rx="8" fill="#FFFFFF" stroke="#475569" stroke-width="1.5"/>
+  <text x="922" y="908" font-size="14" font-weight="600" text-anchor="middle" fill="#0F172A">Code Sandbox MCP</text>
+  <text x="922" y="930" font-size="12" text-anchor="middle" fill="#475569">run_python(code) in a</text>
+  <text x="922" y="948" font-size="12" text-anchor="middle" fill="#475569">throwaway Docker container</text>
+  <text x="922" y="978" font-size="11" text-anchor="middle" fill="#B45309">risk: risky (no network)</text>
+  <rect x="1036" y="880" width="196" height="130" rx="8" fill="#FFFFFF" stroke="#475569" stroke-width="1.5"/>
+  <text x="1134" y="908" font-size="14" font-weight="600" text-anchor="middle" fill="#0F172A">Database MCP</text>
+  <text x="1134" y="930" font-size="12" text-anchor="middle" fill="#475569">query(sql) read-only user</text>
+  <text x="1134" y="948" font-size="12" text-anchor="middle" fill="#475569">schema() → tables</text>
+  <text x="1134" y="978" font-size="11" text-anchor="middle" fill="#059669">risk: safe (SELECT only)</text>
+  <rect x="1248" y="880" width="292" height="130" rx="8" fill="#FFFFFF" stroke="#475569" stroke-width="1.5"/>
+  <text x="1394" y="908" font-size="14" font-weight="600" text-anchor="middle" fill="#0F172A">External Actions MCP</text>
+  <text x="1394" y="930" font-size="12" text-anchor="middle" fill="#475569">send_email · create_calendar_event</text>
+  <text x="1394" y="948" font-size="12" text-anchor="middle" fill="#475569">call_api(endpoint, payload)</text>
+  <text x="1394" y="978" font-size="11" text-anchor="middle" fill="#BE123C">risk: destructive → always needs approval</text>
+  <!-- gate to servers -->
+  <line x1="498" y1="846" x2="498" y2="878" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="710" y1="846" x2="710" y2="878" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="922" y1="846" x2="922" y2="878" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="1134" y1="846" x2="1134" y2="878" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="1190" y1="830" x2="1394" y2="878" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="370" y1="945" x2="398" y2="945" stroke="#475569" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+</svg>

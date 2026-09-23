@@ -1,0 +1,80 @@
+# Single-fact lookups against the synthetic claims database and workspace (PRD.md §6).
+- id: lookup_loans_4471
+  category: lookup
+  difficulty: easy
+  title: Loans on CLM-4471
+  request: >-
+    List the loans on claim CLM-4471 — for each loan give the loan id, principal, APR, start date,
+    missed payments and rollover count — and name the client and the lender.
+  expected_tools: [db_query]
+  max_subtasks: 2
+  must_contain: ["CLM-4471", "Silverpath"]
+  rubric:
+    - Lists exactly three loans (ids 464, 465, 466) with principal, APR, start date, missed payments and rollovers taken from the database.
+    - Names the lender (Silverpath Money) and the client (Jonah Lindqvist).
+    - Invents no field that the database does not hold (for example income).
+
+- id: lookup_claim_status_4421
+  category: lookup
+  difficulty: easy
+  title: Status of CLM-4421
+  request: What is the current status of claim CLM-4421, who is the client, and which lender is it against?
+  expected_tools: [db_query]
+  max_subtasks: 2
+  must_contain: ["Isla Novak", "Northbridge Credit"]
+  rubric:
+    - States the status recorded in the database (documents received) rather than guessing.
+    - Names the client Isla Novak and the lender Northbridge Credit.
+    - Mentions the note on the claim (hardship reported) or says there is a note.
+
+- id: lookup_lender_response_4360
+  category: lookup
+  difficulty: medium
+  title: Lender response for CLM-4360
+  request: >-
+    Summarise the lender's response document on file for claim CLM-4360 (Rosa Adeyemi, Northbridge
+    Credit): what position does the lender take and which loans does it list?
+  expected_tools: [files_read_file]
+  extra_ok_tools: [db_schema, db_query, files_list_dir]
+  must_contain: ["Northbridge"]
+  rubric:
+    - Summarises the position the lender takes in the document, in the lender's own terms.
+    - Lists the loans the document lists, with the figures it gives.
+    - Does not invent loans or figures that are not in the document.
+
+- id: lookup_ruleset_patterns
+  category: lookup
+  difficulty: easy
+  title: Ruleset R-patterns
+  request: >-
+    Which patterns in our affordability ruleset indicate unaffordable lending? Quote each rule id
+    and explain what it means in one sentence.
+  expected_tools: [files_read_file]
+  must_contain: ["R1", "R2", "R3", "R4"]
+  rubric:
+    - Quotes R1 to R4 with meanings that match the ruleset (repeat lending, rollovers, missed payments then further lending, escalating amounts).
+    - Does not invent additional rules.
+
+- id: lookup_claims_by_lender
+  category: lookup
+  difficulty: easy
+  title: Claims against Cobalt Advance
+  request: How many claims do we have against Cobalt Advance, and how many of those are at the ombudsman stage?
+  expected_tools: [db_query]
+  max_subtasks: 2
+  must_contain: ["41"]
+  rubric:
+    - Gives 41 as the total number of claims against Cobalt Advance.
+    - Gives a count for the ombudsman stage that comes from a query, and says so.
+
+- id: lookup_highest_apr
+  category: lookup
+  difficulty: medium
+  title: Highest APR in the book
+  request: Across all loans in the database, what is the highest APR, and which claim and lender does that loan belong to?
+  expected_tools: [db_query]
+  max_subtasks: 2
+  must_contain: ["1292"]
+  rubric:
+    - Reports 1292% as the highest APR.
+    - Names a claim reference and lender that actually hold a loan at that APR.

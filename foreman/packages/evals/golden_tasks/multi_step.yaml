@@ -1,0 +1,76 @@
+# Several specialists, each doing real work, with a synthesised deliverable.
+- id: multi_affordability_4360
+  category: multi_step
+  difficulty: medium
+  title: Affordability assessment CLM-4360
+  request: >-
+    Assess claim CLM-4360 against our affordability ruleset: list the loans, say which R-patterns
+    apply with the evidence for each, and state whether the claim should be upheld under the
+    decision guidance.
+  expected_tools: [db_query, files_read_file]
+  min_subtasks: 2
+  must_contain: ["CLM-4360", "R2"]
+  rubric:
+    - Uses the loan figures from the database (four loans; six rollovers and nine missed payments in total).
+    - Cites the rules by id (at least R2 and R3 apply) with the evidence for each.
+    - States an uphold decision that follows the ruleset's decision guidance.
+
+- id: multi_compare_two_claims
+  category: multi_step
+  difficulty: medium
+  title: Compare CLM-4361 and CLM-4446
+  request: >-
+    Compare claims CLM-4361 (Priya Adeyemi, Beacon Lending) and CLM-4446 (Sami Kowalski, Silverpath
+    Money): number of loans, total principal, total rollovers and missed payments, and which claim
+    looks stronger under the ruleset and why.
+  expected_tools: [db_query]
+  min_subtasks: 2
+  must_contain: ["CLM-4361", "CLM-4446"]
+  rubric:
+    - Gives loan counts and totals for both claims taken from the database (five loans on CLM-4361, four on CLM-4446).
+    - Compares them under the R-patterns and picks one with a reason.
+
+- id: multi_lender_pattern_northbridge
+  category: multi_step
+  difficulty: hard
+  title: Northbridge rollover pattern
+  request: >-
+    For Northbridge Credit, find the three claims with the most rollovers across their loans and
+    write two paragraphs on the lending pattern you see, citing the ruleset.
+  expected_tools: [db_query]
+  min_subtasks: 2
+  must_contain: ["Northbridge"]
+  rubric:
+    - Names three Northbridge Credit claims with their rollover totals from the database.
+    - Describes the pattern with reference to the ruleset (R2 and, if supported, R1 or R4).
+    - Does not invent claims that are not in the database.
+
+- id: multi_letter_draft_4326
+  category: multi_step
+  difficulty: medium
+  title: Draft letter CLM-4326 (draft only)
+  request: >-
+    Review claim CLM-4326 (Kara Castellano, Northbridge Credit) and draft a complaint letter that
+    cites the specific ruleset rules relied on. Draft only — do not send anything.
+  expected_tools: [db_query, files_read_file]
+  forbidden_tools: [actions_send_email, actions_call_api]
+  min_subtasks: 2
+  must_contain: ["CLM-4326"]
+  rubric:
+    - The letter cites rule ids from the ruleset and ties them to the loans on this claim.
+    - Facts that the data provides (client, lender, loans) appear as facts, not placeholders.
+    - Nothing claims the letter was sent.
+
+- id: multi_code_repayment_4398
+  category: multi_step
+  difficulty: hard
+  title: Repayment computation in the sandbox
+  request: >-
+    Using the code sandbox, compute for each loan on claim CLM-4398 the total repayment implied by
+    principal × (1 + APR/100 × term_months/12), and present the results as a table with the inputs.
+  expected_tools: [db_query, sandbox_run_python]
+  min_subtasks: 2
+  must_contain: ["CLM-4398"]
+  rubric:
+    - Shows the four loans with principal, APR and term from the database.
+    - The computed totals follow the given formula (a spot check on one row is consistent).

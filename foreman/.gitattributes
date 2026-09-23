@@ -1,0 +1,4 @@
+# Keep LF everywhere so the repo is identical on Windows and Linux (Docker builds, CI).
+* text=auto eol=lf
+*.png binary
+*.pdf binary

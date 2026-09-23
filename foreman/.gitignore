@@ -1,0 +1,30 @@
+# secrets
+.env
+*.pem
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+# data and outputs (generator lives in infra/seed and is committed)
+data/*
+!data/workspace/.gitkeep
+packages/evals/reports/*
+!packages/evals/reports/.gitkeep
+*.log
+# tooling
+node_modules/
+.idea/
+.vscode/
+.DS_Store
+
+# celery beat state
+celerybeat-schedule*
+
+# dev-up process ids and logs
+.run/

@@ -1,0 +1,79 @@
+# Plans where later subtasks must consume earlier outputs (depends_on), then synthesis.
+- id: dep_letter_after_analysis_4471
+  category: dependent
+  difficulty: hard
+  title: Loans → assessment → letter, CLM-4471
+  request: >-
+    For claim CLM-4471: first list the loans, then assess affordability under the ruleset, then
+    draft a complaint letter that relies on that assessment. Draft only — do not send.
+  expected_tools: [db_query, files_read_file]
+  forbidden_tools: [actions_send_email]
+  min_subtasks: 3
+  require_dependency: true
+  must_contain: ["CLM-4471"]
+  rubric:
+    - The letter's arguments match the assessment (same rules, same loans).
+    - The assessment uses the three loans from the database and cites rule ids.
+    - Nothing claims the letter was sent.
+
+- id: dep_discrepancy_note_4481
+  category: dependent
+  difficulty: hard
+  title: Cross-check lender response CLM-4481
+  request: >-
+    Read the lender response on file for claim CLM-4481 (Kara Whitfield, Northbridge Credit),
+    cross-check the loans it lists against our database, and write a short note for the case
+    handler on any discrepancies or confirmations.
+  expected_tools: [files_read_file, db_query]
+  min_subtasks: 2
+  require_dependency: true
+  must_contain: ["CLM-4481"]
+  rubric:
+    - Compares the document's loan list with the database loan by loan.
+    - States clearly whether they match, and lists any differences found.
+    - Invents no loans on either side.
+
+- id: dep_lender_priority_report
+  category: dependent
+  difficulty: medium
+  title: Harbour vs Beacon priority
+  request: >-
+    Compare the average rollover count per loan for Harbour Loans and Beacon Lending, then
+    recommend which lender's claims the team should prioritise, with reasons grounded in the ruleset.
+  expected_tools: [db_query, files_read_file]
+  min_subtasks: 2
+  require_dependency: true
+  must_contain: ["Harbour", "Beacon"]
+  rubric:
+    - Gives an average rollover figure per lender computed from the database.
+    - Makes a recommendation that follows from those figures and cites R2.
+
+- id: dep_vulnerable_priority_list
+  category: dependent
+  difficulty: medium
+  title: Vulnerable-customer priority list
+  request: >-
+    Find the claims whose notes flag a vulnerable customer, then produce a prioritised list of the
+    three most recently created ones with one line each on why it should be expedited.
+  expected_tools: [db_query]
+  min_subtasks: 2
+  require_dependency: true
+  must_contain: ["vulnerable"]
+  rubric:
+    - The three claims listed carry the vulnerable customer flag in the database notes.
+    - They are ordered by creation date, newest first, with a one-line reason each.
+
+- id: dep_timeline_4411
+  category: dependent
+  difficulty: medium
+  title: Timeline and R1 check, CLM-4411
+  request: >-
+    Build a dated timeline for claim CLM-4411 (Elena Lindqvist, Quickline Finance) from the loans
+    and the lender response, then assess whether R1 (repeat lending) applies.
+  expected_tools: [db_query, files_read_file]
+  min_subtasks: 2
+  require_dependency: true
+  must_contain: ["R1"]
+  rubric:
+    - The timeline uses the loan start and end dates from the database.
+    - The R1 assessment counts consecutive loans within twelve months correctly against that timeline.

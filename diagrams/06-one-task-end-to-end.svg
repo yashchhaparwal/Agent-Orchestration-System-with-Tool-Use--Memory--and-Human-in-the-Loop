@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E11D48"/></marker>
+  </defs>
+  <rect width="1600" height="1000" fill="#FFFFFF"/>
+  <text x="40" y="44" font-size="24" font-weight="700" fill="#0F172A">One task, end to end — "Summarise the lender documents for claim #4471 and draft the complaint letter"</text>
+  <text x="40" y="70" font-size="14" fill="#475569">Sequence of what happens, who does it, and where a human is pulled in. Numbers are the order of events; the footer is the trace you would see in the explorer.</text>
+
+  <g font-size="13" font-weight="700" text-anchor="middle">
+    <rect x="60" y="90" width="120" height="40" rx="8" fill="#F8FAFC" stroke="#94A3B8"/><text x="120" y="115" fill="#0F172A">User</text>
+    <rect x="240" y="90" width="120" height="40" rx="8" fill="#F8FAFC" stroke="#94A3B8"/><text x="300" y="115" fill="#0F172A">API</text>
+    <rect x="430" y="90" width="140" height="40" rx="8" fill="#EEF2FF" stroke="#4F46E5"/><text x="500" y="115" fill="#312E81">Supervisor</text>
+    <rect x="640" y="90" width="120" height="40" rx="8" fill="#EDE9FE" stroke="#7C3AED"/><text x="700" y="115" fill="#4C1D95">Memory</text>
+    <rect x="830" y="90" width="140" height="40" rx="8" fill="#ECFEFF" stroke="#0891B2"/><text x="900" y="115" fill="#155E75">Specialists</text>
+    <rect x="1020" y="90" width="120" height="40" rx="8" fill="#FFF1F2" stroke="#E11D48"/><text x="1080" y="115" fill="#BE123C">Gate</text>
+    <rect x="1190" y="90" width="120" height="40" rx="8" fill="#F1F5F9" stroke="#475569"/><text x="1250" y="115" fill="#0F172A">MCP tools</text>
+    <rect x="1360" y="90" width="120" height="40" rx="8" fill="#FFFBEB" stroke="#D97706"/><text x="1420" y="115" fill="#92400E">Reviewer</text>
+  </g>
+  <g stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4 4">
+    <line x1="120" y1="130" x2="120" y2="910"/><line x1="300" y1="130" x2="300" y2="910"/><line x1="500" y1="130" x2="500" y2="910"/>
+    <line x1="700" y1="130" x2="700" y2="910"/><line x1="900" y1="130" x2="900" y2="910"/><line x1="1080" y1="130" x2="1080" y2="910"/>
+    <line x1="1250" y1="130" x2="1250" y2="910"/><line x1="1420" y1="130" x2="1420" y2="910"/>
+  </g>
+
+  <g font-size="11" fill="#334155">
+    <line x1="120" y1="165" x2="298" y2="165" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+    <text x="130" y="158">1  POST /tasks {request, user_id}</text>
+
+    <line x1="300" y1="195" x2="498" y2="195" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+    <text x="310" y="188">2  start graph(task_id) · 202 Accepted back to user</text>
+
+    <line x1="500" y1="230" x2="698" y2="230" stroke="#7C3AED" stroke-width="1.5" marker-end="url(#a)"/>
+    <text x="510" y="223">3  recall: similar past tasks for u_42</text>
+    <line x1="700" y1="255" x2="502" y2="255" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#a)"/>
+    <text x="510" y="272">   ← 2 lessons ("affordability finding first", "use db before PDFs")</text>
+
+    <rect x="440" y="290" width="120" height="44" rx="6" fill="#EEF2FF" stroke="#4F46E5"/>
+    <text x="500" y="308" text-anchor="middle" font-weight="600" fill="#312E81">4  plan (LLM)</text>
+    <text x="500" y="324" text-anchor="middle" fill="#475569">conf 0.82 → no L3</text>
+    <text x="570" y="300" fill="#475569">plan: [A research: pull loan history + docs] → [B analysis: affordability check] → [C writing: letter, needs A+B]</text>
+
+    <line x1="500" y1="355" x2="898" y2="355" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+    <text x="510" y="348">5  dispatch subtask A → research (B waits on A; C waits on A+B)</text>
+
+    <line x1="900" y1="385" x2="1078" y2="385" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+    <text x="910" y="378">6  tool_use db.query("SELECT … loans WHERE claim=4471")</text>
+    <line x1="1080" y1="408" x2="1248" y2="408" stroke="#059669" stroke-width="1.5" marker-end="url(#a)"/>
+    <text x="1090" y="401" fill="#047857">safe (SELECT-only) → execute</text>
+    <line x1="1250" y1="430" x2="902" y2="430" stroke="#334155" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#a)"/>
+    <text x="910" y="446">   ← tool_result: 3 loans, 2019–2021, £4,800 total</text>
+
+    <line x1="900" y1="475" x2="1078" y2="475" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+    <text x="910" y="468">7  tool_use docs.read("claims/4471/lender_response.pdf")</text>
+    <line x1="1080" y1="497" x2="1248" y2="497" stroke="#059669" stroke-width="1.5" marker-end="url(#a)"/>
+    <text x="1090" y="490" fill="#047857">safe → execute</text>
+    <line x1="1250" y1="519" x2="902" y2="519" stroke="#334155" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#a)"/>
+    <text x="910" y="535">   ← tool_result: 6 pages text (truncated to 8k tokens)</text>
+
+    <line x1="900" y1="560" x2="1418" y2="560" stroke="#D97706" stroke-width="1.5" marker-end="url(#a)"/>
+    <text x="910" y="553">8  SubtaskResult A → review</text>
+    <line x1="1420" y1="583" x2="502" y2="583" stroke="#D97706" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#a)"/>
+    <text x="910" y="599" fill="#B45309">   ← accept (4/5) — "complete, cites both sources"</text>
+
+    <line x1="500" y1="625" x2="898" y2="625" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+    <text x="510" y="618">9  dispatch B → analysis (reads A from working memory) … sandbox.run_python → accept (5/5)</text>
+
+    <line x1="500" y1="660" x2="898" y2="660" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+    <text x="510" y="653">10 dispatch C → writing (reads A + B) → drafts letter</text>
+
+    <line x1="900" y1="695" x2="1078" y2="695" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+    <text x="910" y="688">11 tool_use email.send(to=lender, body=letter)</text>
+    <line x1="1080" y1="720" x2="302" y2="720" stroke="#E11D48" stroke-width="1.5" marker-end="url(#ar)"/>
+    <text x="320" y="713" fill="#BE123C">12 destructive → L2 interrupt(): checkpoint saved, approvals row created, status = awaiting_approval, Slack ping</text>
+    <line x1="300" y1="745" x2="122" y2="745" stroke="#E11D48" stroke-width="1.5" marker-end="url(#ar)"/>
+    <text x="130" y="738" fill="#BE123C">13 notify</text>
+
+    <line x1="120" y1="780" x2="298" y2="780" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+    <text x="130" y="773">14 POST /approvals/91/decide {reject, "do not send — attach as draft"}</text>
+    <line x1="300" y1="805" x2="898" y2="805" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+    <text x="310" y="798">15 resume graph with Command(resume=reject) → writing gets error tool_result → returns letter as draft text</text>
+
+    <line x1="900" y1="835" x2="1418" y2="835" stroke="#D97706" stroke-width="1.5" marker-end="url(#a)"/>
+    <text x="910" y="828">16 SubtaskResult C → review → accept (4/5)</text>
+
+    <rect x="430" y="855" width="140" height="36" rx="6" fill="#EEF2FF" stroke="#4F46E5"/>
+    <text x="500" y="877" text-anchor="middle" font-weight="600" fill="#312E81">17 synthesize</text>
+    <line x1="500" y1="891" x2="500" y2="905" stroke="#334155"/>
+    <line x1="500" y1="905" x2="122" y2="905" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+    <text x="130" y="898">18 deliver: summary + draft letter · write_memory: "user u_42 wants letters as drafts, never auto-sent"</text>
+  </g>
+
+  <rect x="40" y="925" width="1520" height="60" rx="10" fill="#0F172A"/>
+  <text x="60" y="949" font-size="12" font-weight="700" fill="#94A3B8">TRACE FOR THIS TASK</text>
+  <text x="60" y="970" font-size="12" fill="#E2E8F0">task 4471 · 7 LLM calls (1 plan, 3 specialist loops, 3 reviews) · 4 tool calls (3 allowed, 1 escalated → rejected) · 1 memory read, 1 memory write · 1 human decision · total $0.19 · 41 s compute + 2 h 10 m waiting for approval</text>
+</svg>

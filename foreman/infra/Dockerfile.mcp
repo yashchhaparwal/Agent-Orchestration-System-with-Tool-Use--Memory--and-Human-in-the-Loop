@@ -1,0 +1,19 @@
+# One image for every MCP server; the compose service picks the module to run.
+#   docker build -f infra/Dockerfile.mcp -t foreman-mcp .
+#   docker run --rm -e MCP_HOST=0.0.0.0 -e MCP_PORT=7004 foreman-mcp packages.tools.mcp_servers.database
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+WORKDIR /app
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
+
+COPY packages ./packages
+COPY config ./config
+RUN uv sync --frozen --no-dev
+
+ENV PATH="/app/.venv/bin:$PATH"
+ENTRYPOINT ["python", "-m"]
+CMD ["packages.tools.mcp_servers.files"]

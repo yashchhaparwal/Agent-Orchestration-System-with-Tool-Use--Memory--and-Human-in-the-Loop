@@ -1,0 +1,92 @@
+1.
+Done this round
+Infrastructure. Docker Desktop wasn't running (the client binary worked, the engine didn't), so I launched it; all five services are now up — Postgres (healthy, with the foreman_ro SELECT-only role), Redis, Chroma, Jaeger, Ollama with nomic-embed-text pulled. Two commits on main: 2beb84c (Phase 0) and 4e54b95 (Phase 1, 57 files, +3,306 lines). .env and data/ are confirmed unstaged.
+
+Phase 1 code — everything in Phases.md Phase 1, per the Architecture spec: typed hand-offs, the single-env-reader settings module, the OpenAI-compatible provider with per-role fallback chains and cost entries, OpenTelemetry tracing, the database MCP server (sqlparse guard → read-only role → LIMIT wrap → statement timeout) and files MCP server (canonical path confinement), the registry (discovery + policy merge that drops unlisted tools, fail-closed), the gate (block / allow / approve), the agent loop with all four budget guards, the research agent, the synthetic-claims seed, and the run_subtask CLI.
+
+Verification. pytest 65 passed / 1 skipped (Windows symlink) · ruff clean · mypy --strict clean · seed: 200 claims, 555 loans, 201 documents. Live acceptance run on CLM-4471: completed in 3 iterations, 3 LLM calls on mistral-medium-latest with no fallback needed, 7,110 tokens, four gated tool calls (db_schema → files_list_dir → db_query → files_read_file), correct loan table and lender summary with sources — and a 28-span Jaeger trace showing exactly the task → agent → iteration → llm.call / gate.decide / tool.* tree the phase asked for.
+
+Three things worth knowing
+The mcp SDK is now 2.x — FastMCP became MCPServer, the client is mcp.Client. I migrated to the current API rather than pinning an old one; docs updated.
+Tool rejections must raise ToolError. A plain exception gets wrapped as "Error executing tool X" and the reason is hidden from the model — the guard's "rejected: only SELECT allowed" would never have reached it. Fixed in both servers, and the tests assert on the reasons.
+The gate's rate limit accidentally proved itself: a loop test borrowed a 2-calls/min policy and the third call was correctly blocked. Tests now use a loosened copy; the fail-closed behaviour is untouched.
+Full log in Memory.md.
+
+Still open
+The two MCP servers are running as background processes from this session; restart them with MCP_PORT=7004 uv run python -m packages.tools.mcp_servers.database / MCP_PORT=7002 … .files when you come back (README has the commands).
+Rotate the paid TokenRouter key in its dashboard — still on you.
+VS Code shows "package not installed" hints on pyproject.toml because it isn't pointed at .venv — select that interpreter.
+Next is Phase 2: the LangGraph graph itself (state, nodes, Send fan-out, PostgresSaver checkpoints), the supervisor and reviewer agents, the worker, and POST /v1/tasks — done when a 3-subtask task survives a worker restart mid-run. Say the word and I'll start it.
+
+
+
+
+
+
+
+
+
+
+
+2.
+Phase 2 is committed (31dfc87, 71 files) and nothing else is pending. Here's the state of things.
+
+What Phase 2 delivered
+The orchestration graph — the LangGraph state machine from diagram 02 is now real: intake → recall_memory → plan → dispatch → specialists (parallel Send() per ready subtask) → review → retry / dispatch dependents / synthesize → deliver → write_memory, with state checkpointed in Postgres after every node. Around it: typed ExecutionPlan (rejects duplicate ids, unknown deps, and cycles), supervisor and reviewer agents plus the three remaining specialists, the tier-2 tables under Alembic, a Celery worker that resumes from a checkpoint when one exists, and the FastAPI service (POST /v1/tasks, GET /v1/tasks/{id}, API-key middleware, problem-details errors).
+
+Verification — 91 unit tests pass (graph happy path, parallel fan-out, retry-with-feedback, escalation after max retries, fail-closed plan approval, crash-then-resume), ruff and mypy clean, and the Postgres-checkpoint resume test passes against the real database: a reviewer crashes mid-task, a fresh saver + graph resumes the thread, and completed work is not re-run.
+
+Live acceptance — POST /v1/tasks → Redis → Celery → graph: the CLM-4471 showcase finished done in 313 s. Six subtasks, all accepted at 5/5 (one after a reviewer-driven retry), and a deliverable at 0.99 confidence with eleven sources whose loan table matches the database row-for-row and whose rule application (A2 not met, R1–R4 present → §D says uphold) correctly flags the lender's contrary decision. Jaeger shows 220 spans: 53 model calls across four providers, 13 fallbacks that all recovered, 23 gate decisions.
+
+The failure that made it better
+The first live run failed, and the worker log turned it into three fixes worth having: (1) a real portability bug — an assistant turn from Groq carries a reasoning field that Mistral rejects with 422 after a mid-loop fallback, so assistant messages are now rebuilt from standard fields only; (2) Groq's free tier caps at 8,000 tokens per minute, which a ~10k-token tool-loop request can never fit, so Groq now serves only short-prompt roles; (3) parallel specialists burst past Mistral's rate limit, so providers have concurrency caps and the chain backs off (3/8/20 s) when every entry is rate-limited. Notably, the failing run itself was handled exactly as designed — precise reviewer rejections, three retries, escalation, a persisted failed with the reason.
+
+Full log and lessons are in Memory.md; run commands are in the README.
+
+Still open
+Rotate the paid TokenRouter key (unchanged from Day 0).
+Docker Desktop stops between sessions; make up needs the engine running first.
+The background API, worker, and MCP servers from this session die with it — the README lists how to restart them.
+Next is Phase 3 (tools + gate): the sandbox, web-search, and actions MCP servers, the full policy, the Redis rate limiter, the LLM classifier for risky calls, and the tool-invocation ledger — done when a destructive call is stopped with a logged reason, an unauthorised tool is refused, and the sandbox runs code with no network. Say the word and I'll start.
+
+
+
+
+
+
+3.
+Phase 3 is committed (52eae9b, 38 files, +2,022 lines) and nothing else is pending. Here's where the project stands.
+
+What Phase 3 delivered
+The full tool layer — five MCP servers now stand behind the registry. The three new ones each carry a specific safety property by construction:
+
+Sandbox (run_python): every call is a fresh container with network_mode=none, a read-only root filesystem with a tmpfs /work, all capabilities dropped, no-new-privileges, an unprivileged user, memory/CPU/PID limits, a kill on timeout, and guaranteed removal. Built from infra/sandbox/Dockerfile via make sandbox-image.
+Web (search, fetch): search behind a backend protocol (deterministic fixtures by default); fetch with an SSRF guard that resolves DNS itself, rejects loopback/private/link-local ranges, re-checks every redirect hop, refuses credentials in URLs, and honours an optional allow-list.
+Actions (send_email, create_calendar_event, call_api): validate and write an outbox row. There is no code path that sends anything — destructive actions are gated twice, by the human at the gate and the human who drains the outbox.
+The gate, completed — decide_async applies the full algorithm: unknown tool / wrong agent / bad arguments / rate limit → block; safe → allow; destructive → a human, always; risky → a small LLM classifier decides whether a human needs to look, and any classifier failure means approve. A Redis-backed rate limiter shares budgets across workers and fails closed. Every gated call becomes a ToolEvent (arguments hashed, never stored) and lands in a tool_invocations ledger the API exposes.
+
+Verification — 132 unit tests, ruff and mypy clean. The live acceptance test against all five servers, Redis, Postgres and Docker passed 4/4: eleven tools registered; an unauthorised call blocked with its reason; a destructive call stopped at the gate and producing only an outbox row when invoked directly; and the sandbox proving itself — NETWORK_BLOCKED, a pandas computation returning the right answer, a hung script killed after 3 s, a write to /etc/hostname refused. Full log in Memory.md; run instructions in the README.
+
+Progress overall
+Four commits on main: Phase 0 (skeleton), Phase 1 (loop + first servers), Phase 2 (graph, worker, API), Phase 3 (tools + gate). The system now plans, executes through eleven gated tools with real safety properties, reviews, retries, escalates, persists, resumes from checkpoints, and traces everything — all at $0.
+
+Still open
+Rotate the paid TokenRouter key (unchanged since Day 0).
+The five MCP servers, API, and worker from this session die with it; the README lists the commands, and docker compose --profile tools up is the containerised alternative.
+
+
+
+4.
+Phase 4 is complete, committed, and the tree is clean. Nothing further to run — here's the recap.
+
+Phase 4 — human-in-the-loop: done and committed (68d04ab)
+What was built (56 files; all under the "$0, no artifacts, no AgentLens" constraints)
+
+Pausable agent loop — when the gate says approve, the loop serialises its messages, pending calls and ledgers into a LoopCheckpoint in graph state and returns; on resume it continues from that exact turn, so no model call is ever replayed. This avoided LangGraph's node re-execution problem that a naive interrupt() inside the loop would have caused.
+Three interrupt nodes — await_approval (L2 tool calls), approve_plan (L3), escalate (L4) — each with approve / modify / reject / take-over. Approval rows are idempotent, decisions are single-shot (409), reject needs a reason (422), and timeouts can only reject or cancel.
+Persistence, worker, API, UI — approvals table + migration, resume_task + beat expire_approvals, /v1/approvals* + /v1/outbox, and a Streamlit operator console (queue, context package, four decisions, tasks, outbox) at apps/review_ui/.
+Verified: 167 unit tests (whole decision matrix with fakes, loop pause/resume, policy/store/timeouts, API, headless Streamlit pages), 3 Postgres resume integration tests, mypy --strict and ruff clean. Live, on free tiers: the showcase task paused on actions_send_email with the full letter; approve completed after I killed and replaced the worker mid-pause (26 s resume, nothing replayed, outbox row queued); modify sent the edited recipient/subject to the outbox; reject queued nothing; take-over made the human's text the result; L3 plan approval worked via require_human_review.
+
+Three things the live run exposed and I fixed: (1) the Phase 2 prompts said "never send", so the first task never proposed the email — the gate, not the plan, now decides; (2) after a rejection the agent asked again, and after the reviewer rejected the "not sent" result the retry asked a third time — a human rejection is now final for the subtask and its retries, and the reviewer is told why the action is missing; (3) celery -B is refused on Windows — beat is a separate process (make beat).
+
+Still running for you: API :8000, Streamlit :8501, Jaeger :16686, worker + beat, five MCP servers. Full details are in docs/Memory.md. Next is Phase 5 (memory tiers); the one open item for you remains rotating the paid TokenRouter key.

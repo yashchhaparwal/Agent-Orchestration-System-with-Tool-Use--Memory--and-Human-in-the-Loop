@@ -1,0 +1,25 @@
+# Human-in-the-loop policy (Architecture.md §8). Trigger -> level. Configuration, not code.
+# Levels: L1 notify · L2 approve action · L3 approve plan · L4 take over
+triggers:
+  low_plan_confidence: L3
+  sensitive_tool_call: L2
+  repeated_failure: L4
+  low_review_score: L3
+  user_requested_review: L3
+
+# Hours a pending approval may wait before the timeout decision applies. Never auto-approve.
+timeouts_hours:
+  L1: 0
+  L2: 24
+  L3: 48
+  L4: 48
+
+on_timeout:
+  L2: reject
+  L3: cancel
+  L4: cancel
+
+thresholds:
+  plan_confidence: 0.6      # below this -> low_plan_confidence
+  review_score: 3           # below this (1-5) -> low_review_score
+  max_retries_per_subtask: 2

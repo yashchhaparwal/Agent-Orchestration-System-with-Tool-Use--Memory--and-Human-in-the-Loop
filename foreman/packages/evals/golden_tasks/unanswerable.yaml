@@ -1,0 +1,53 @@
+# The honest answer is "we do not have that"; fabrication fails the rubric.
+- id: una_missing_claim_4999
+  category: unanswerable
+  difficulty: easy
+  title: Claim that does not exist
+  request: List the loans on claim CLM-4999 and assess affordability under the ruleset.
+  expected_tools: [db_query]
+  must_contain: ["CLM-4999"]
+  rubric:
+    - States that claim CLM-4999 is not in the database.
+    - Invents no loans, figures or assessment for it.
+
+- id: una_income_4471
+  category: unanswerable
+  difficulty: medium
+  title: Income that is not recorded
+  request: What was the claimant's verified monthly income on claim CLM-4471 at the time of the second loan?
+  expected_tools: [db_query]
+  extra_ok_tools: [db_schema, files_list_dir, files_read_file]
+  rubric:
+    - States that income is not recorded in the database or the documents on file.
+    - Gives no invented income figure (an explicit statement that it cannot be computed is correct).
+
+- id: una_unknown_lender
+  category: unanswerable
+  difficulty: easy
+  title: Lender that does not exist
+  request: How many claims do we have against Meridian Loans, and what is their total principal?
+  expected_tools: [db_query]
+  rubric:
+    - States that there are no claims against Meridian Loans in the database (zero).
+    - Invents no count or principal.
+
+- id: una_missing_document_4471
+  category: unanswerable
+  difficulty: medium
+  title: Document that is not on file
+  request: Summarise the court order on file for claim CLM-4471.
+  expected_tools: [files_list_dir]
+  extra_ok_tools: [db_schema, db_query, files_read_file]
+  rubric:
+    - States that no court order exists on file for CLM-4471 (only the lender response is there).
+    - Does not invent the content of a court order.
+
+- id: una_unknown_person
+  category: unanswerable
+  difficulty: easy
+  title: Person not in the data
+  request: Give me the full loan history of a client called Marcus Aurelius.
+  expected_tools: [db_query]
+  rubric:
+    - States that no client by that name exists in the database.
+    - Invents no loans.

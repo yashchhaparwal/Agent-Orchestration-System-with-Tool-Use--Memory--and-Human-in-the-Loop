@@ -1,0 +1,110 @@
+[project]
+name = "foreman"
+version = "0.1.0"
+description = "Agent orchestration system with gated MCP tool use, three-tier memory, and human-in-the-loop"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Sayed Mohammad Firdousi" }]
+dependencies = [
+    # orchestration
+    "langgraph>=0.4",
+    "langgraph-checkpoint-postgres>=2.0",
+    # llm access (all free providers are OpenAI-compatible)
+    "openai>=1.60",
+    # tools
+    "mcp>=1.6",
+    "docker>=7.1",
+    "sqlparse>=0.5",
+    # models / config
+    "pydantic>=2.8",
+    "pydantic-settings>=2.4",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+    # api + worker
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "celery[redis]>=5.4",
+    "redis>=5.0",
+    # persistence
+    "sqlalchemy>=2.0",
+    "alembic>=1.13",
+    "psycopg[binary,pool]>=3.2",
+    "chromadb>=0.5",
+    # observability
+    "opentelemetry-sdk>=1.27",
+    "opentelemetry-exporter-otlp>=1.27",
+    "structlog>=24.1",
+    "httpx>=0.27",
+    # operator ui (v1)
+    "streamlit>=1.38",
+    "jsonschema>=4.26.0",
+]
+
+[project.optional-dependencies]
+# Only installed if the author opts into paid providers (ENABLE_PAID_PROVIDERS=true).
+paid = ["anthropic>=0.40"]
+# Local reranker / embedding fallbacks for Project 6.
+rerank = ["sentence-transformers>=3.0"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "respx>=0.21",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "types-PyYAML",
+    "types-redis",
+    "types-jsonschema>=4.26.0.20260518",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["apps", "packages"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-m 'not integration and not network'"
+markers = [
+    "integration: needs the compose stack (redis, postgres, chroma)",
+    "network: calls a real provider (never run in CI by default)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["apps", "packages", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "SIM"]
+
+[tool.ruff.lint.pycodestyle]
+# The formatter keeps code at 100 columns; E501 only flags docstrings/strings past 120.
+max-line-length = 120
+
+[tool.ruff.lint.isort]
+known-first-party = ["apps", "packages", "infra", "tests", "scripts"]
+
+[tool.ruff.lint.per-file-ignores]
+# Long literal strings: markdown fixtures in the seed generator, SQL/prompts in tests.
+"infra/seed/generate.py" = ["E501"]
+"tests/**" = ["E501"]
+"scripts/**" = ["E501"]
+"apps/review_ui/pages/*.py" = ["N999"]  # Streamlit orders pages by the numeric prefix
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["packages", "apps"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# sqlparse ships no type information; the guard is covered by tests/unit/test_sql_guard.py.
+module = ["packages.tools.mcp_servers.database.guard"]
+disallow_untyped_calls = false

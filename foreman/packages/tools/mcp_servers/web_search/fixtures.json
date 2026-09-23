@@ -1,0 +1,15 @@
+{
+  "affordability": [
+    {"title": "Affordability checks for short-term credit — overview (synthetic)", "url": "https://example.test/guides/affordability-checks", "snippet": "A lender is expected to verify income from evidence, assess regular expenditure, and consider the credit file before each advance, repeating the checks when repayments become a large share of income."},
+    {"title": "Repeat lending and rollover patterns (synthetic)", "url": "https://example.test/guides/repeat-lending", "snippet": "Three or more consecutive loans within twelve months, rollovers, and escalating amounts without new evidence are treated as indicators that lending was not affordable."}
+  ],
+  "ombudsman": [
+    {"title": "Escalating a lending complaint (synthetic)", "url": "https://example.test/guides/escalation", "snippet": "If a lender rejects a complaint, the borrower may refer it to the ombudsman; a referral should set out the loans, the checks that were or were not performed, and the rules relied on."}
+  ],
+  "complaint letter": [
+    {"title": "Structure of an irresponsible-lending complaint letter (synthetic)", "url": "https://example.test/guides/complaint-letter", "snippet": "State the loans and dates, the affordability checks the lender says it performed, the specific rules not met, the patterns present, and the remedy sought."}
+  ],
+  "*": [
+    {"title": "Consumer credit claims — reference index (synthetic)", "url": "https://example.test/index", "snippet": "Guides on affordability, repeat lending, complaints, and escalation. All content on example.test is synthetic material for the Foreman demo."}
+  ]
+}

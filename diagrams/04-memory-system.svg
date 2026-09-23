@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#475569"/></marker>
+    <marker id="av" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/></marker>
+  </defs>
+  <rect width="1600" height="900" fill="#FFFFFF"/>
+  <text x="40" y="48" font-size="26" font-weight="700" fill="#0F172A">The Memory System — three tiers with different lifetimes and different jobs</text>
+  <text x="40" y="76" font-size="15" fill="#475569">"Memory" in an agent is not one thing. Mixing these up is the most common design mistake; keeping them separate is what you'll explain in interviews.</text>
+
+  <!-- Tier 1 -->
+  <rect x="40" y="110" width="480" height="330" rx="12" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="60" y="140" font-size="16" font-weight="700" fill="#92400E">TIER 1 · Working memory</text>
+  <text x="60" y="162" font-size="12" fill="#B45309" font-weight="600">Redis · lifetime: one task (minutes–hours) · scope: task_id</text>
+  <text x="60" y="192" font-size="13" font-weight="600" fill="#0F172A">What lives here</text>
+  <text x="60" y="212" font-size="12" fill="#475569">• the ExecutionPlan and which subtasks are done</text>
+  <text x="60" y="230" font-size="12" fill="#475569">• each specialist's output (so dependents can read it)</text>
+  <text x="60" y="248" font-size="12" fill="#475569">• intermediate artefacts: fetched pages, query results</text>
+  <text x="60" y="266" font-size="12" fill="#475569">• error log and retry counters</text>
+  <text x="60" y="296" font-size="13" font-weight="600" fill="#0F172A">Why Redis</text>
+  <text x="60" y="316" font-size="12" fill="#475569">Sub-ms reads by every parallel specialist; TTL on the key</text>
+  <text x="60" y="334" font-size="12" fill="#475569">clears it automatically after the task ends.</text>
+  <text x="60" y="364" font-size="13" font-weight="600" fill="#0F172A">Key shape</text>
+  <text x="60" y="384" font-size="12" fill="#0F172A" font-family="Consolas, monospace">task:{id}:plan · task:{id}:result:{subtask}</text>
+  <text x="60" y="402" font-size="12" fill="#0F172A" font-family="Consolas, monospace">task:{id}:errors  (TTL 24h)</text>
+
+  <!-- Tier 2 -->
+  <rect x="560" y="110" width="480" height="330" rx="12" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="580" y="140" font-size="16" font-weight="700" fill="#1E3A8A">TIER 2 · Persistent state</text>
+  <text x="580" y="162" font-size="12" fill="#1D4ED8" font-weight="600">PostgreSQL · lifetime: forever · scope: system of record</text>
+  <text x="580" y="192" font-size="13" font-weight="600" fill="#0F172A">What lives here</text>
+  <text x="580" y="212" font-size="12" fill="#475569">• tasks table: request, status, final output, cost</text>
+  <text x="580" y="230" font-size="12" fill="#475569">• LangGraph checkpoints: full TaskState after each node</text>
+  <text x="580" y="248" font-size="12" fill="#475569">• approvals: what was asked, who decided, when, why</text>
+  <text x="580" y="266" font-size="12" fill="#475569">• audit log + cost ledger per task / agent / model</text>
+  <text x="580" y="296" font-size="13" font-weight="600" fill="#0F172A">Why Postgres</text>
+  <text x="580" y="316" font-size="12" fill="#475569">Durable + transactional. A task paused for human approval</text>
+  <text x="580" y="334" font-size="12" fill="#475569">on Monday can resume on Wednesday from its checkpoint.</text>
+  <text x="580" y="364" font-size="13" font-weight="600" fill="#0F172A">This is NOT "memory" the agent reasons over</text>
+  <text x="580" y="384" font-size="12" fill="#475569">It is bookkeeping. The model never reads raw rows;</text>
+  <text x="580" y="402" font-size="12" fill="#475569">the replay tool and dashboards do.</text>
+
+  <!-- Tier 3 -->
+  <rect x="1080" y="110" width="480" height="330" rx="12" fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.5"/>
+  <text x="1100" y="140" font-size="16" font-weight="700" fill="#4C1D95">TIER 3 · Long-term semantic memory</text>
+  <text x="1100" y="162" font-size="12" fill="#6D28D9" font-weight="600">ChromaDB · lifetime: weeks–months · scope: user / domain</text>
+  <text x="1100" y="192" font-size="13" font-weight="600" fill="#0F172A">What lives here</text>
+  <text x="1100" y="212" font-size="12" fill="#475569">• "lessons": for task type X, approach Y worked / failed</text>
+  <text x="1100" y="230" font-size="12" fill="#475569">• user preferences observed (tone, format, constraints)</text>
+  <text x="1100" y="248" font-size="12" fill="#475569">• domain facts discovered during tasks</text>
+  <text x="1100" y="266" font-size="12" fill="#475569">• past plans, as examples for the planner</text>
+  <text x="1100" y="296" font-size="13" font-weight="600" fill="#0F172A">Why a vector store</text>
+  <text x="1100" y="316" font-size="12" fill="#475569">Recall is by meaning, not by key: "a task like this one"</text>
+  <text x="1100" y="334" font-size="12" fill="#475569">→ embed the new request, nearest-neighbour search.</text>
+  <text x="1100" y="364" font-size="13" font-weight="600" fill="#0F172A">This IS what makes the system improve</text>
+  <text x="1100" y="384" font-size="12" fill="#475569">Same retrieval machinery as Project 6 — hybrid search,</text>
+  <text x="1100" y="402" font-size="12" fill="#475569">reranking, metadata filters — pointed at the agent's own past.</text>
+
+  <!-- Write path -->
+  <rect x="40" y="480" width="740" height="200" rx="12" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="60" y="508" font-size="14" font-weight="700" fill="#334155">WRITE PATH — after a task completes (write_memory node)</text>
+  <rect x="60" y="530" width="150" height="60" rx="8" fill="#FFFFFF" stroke="#475569" stroke-width="1.5"/>
+  <text x="135" y="556" font-size="12" font-weight="600" text-anchor="middle" fill="#0F172A">Task transcript</text>
+  <text x="135" y="574" font-size="11" text-anchor="middle" fill="#475569">plan + results + verdicts</text>
+  <line x1="210" y1="560" x2="248" y2="560" stroke="#475569" stroke-width="1.5" marker-end="url(#a)"/>
+  <rect x="250" y="530" width="170" height="60" rx="8" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.5"/>
+  <text x="335" y="556" font-size="12" font-weight="600" text-anchor="middle" fill="#312E81">Memory extractor (LLM)</text>
+  <text x="335" y="574" font-size="11" text-anchor="middle" fill="#475569">→ 1–5 short "lesson" records</text>
+  <line x1="420" y1="560" x2="458" y2="560" stroke="#475569" stroke-width="1.5" marker-end="url(#a)"/>
+  <rect x="460" y="530" width="140" height="60" rx="8" fill="#FFFFFF" stroke="#475569" stroke-width="1.5"/>
+  <text x="530" y="556" font-size="12" font-weight="600" text-anchor="middle" fill="#0F172A">Embed</text>
+  <text x="530" y="574" font-size="11" text-anchor="middle" fill="#475569">embedding model</text>
+  <line x1="600" y1="560" x2="638" y2="560" stroke="#7C3AED" stroke-width="1.5" marker-end="url(#av)"/>
+  <rect x="640" y="530" width="120" height="60" rx="8" fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.5"/>
+  <text x="700" y="556" font-size="12" font-weight="600" text-anchor="middle" fill="#4C1D95">ChromaDB</text>
+  <text x="700" y="574" font-size="11" text-anchor="middle" fill="#475569">upsert + metadata</text>
+  <text x="60" y="620" font-size="12" fill="#475569">Dedup first: if a near-identical lesson exists (cosine &gt; 0.92), bump its importance instead of inserting. Store: user_id, task_type,</text>
+  <text x="60" y="638" font-size="12" fill="#475569">outcome (success/failure), importance, created_at, last_accessed, access_count. Memories that are never recalled decay and expire.</text>
+  <text x="60" y="664" font-size="11" fill="#6D28D9" font-style="italic">Consolidation job (nightly): cluster similar lessons → one summary record. Keeps the store small and the recall precise.</text>
+
+  <!-- Read path -->
+  <rect x="820" y="480" width="740" height="200" rx="12" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="840" y="508" font-size="14" font-weight="700" fill="#334155">READ PATH — before planning (recall_memory node)</text>
+  <rect x="840" y="530" width="150" height="60" rx="8" fill="#FFFFFF" stroke="#475569" stroke-width="1.5"/>
+  <text x="915" y="556" font-size="12" font-weight="600" text-anchor="middle" fill="#0F172A">New request</text>
+  <text x="915" y="574" font-size="11" text-anchor="middle" fill="#475569">+ user_id</text>
+  <line x1="990" y1="560" x2="1028" y2="560" stroke="#475569" stroke-width="1.5" marker-end="url(#a)"/>
+  <rect x="1030" y="530" width="170" height="60" rx="8" fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.5"/>
+  <text x="1115" y="556" font-size="12" font-weight="600" text-anchor="middle" fill="#4C1D95">Hybrid search</text>
+  <text x="1115" y="574" font-size="11" text-anchor="middle" fill="#475569">filter user/type · top-k=5</text>
+  <line x1="1200" y1="560" x2="1238" y2="560" stroke="#475569" stroke-width="1.5" marker-end="url(#a)"/>
+  <rect x="1240" y="530" width="140" height="60" rx="8" fill="#FFFFFF" stroke="#475569" stroke-width="1.5"/>
+  <text x="1310" y="556" font-size="12" font-weight="600" text-anchor="middle" fill="#0F172A">Rerank + trim</text>
+  <text x="1310" y="574" font-size="11" text-anchor="middle" fill="#475569">keep 2–3, ≤ 600 tokens</text>
+  <line x1="1380" y1="560" x2="1418" y2="560" stroke="#475569" stroke-width="1.5" marker-end="url(#a)"/>
+  <rect x="1420" y="530" width="120" height="60" rx="8" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.5"/>
+  <text x="1480" y="556" font-size="12" font-weight="600" text-anchor="middle" fill="#312E81">Planner prompt</text>
+  <text x="1480" y="574" font-size="11" text-anchor="middle" fill="#475569">"Relevant past…"</text>
+  <text x="840" y="620" font-size="12" fill="#475569">Inject as clearly-labelled context, never as instructions. Log which memories were recalled (trace span) so you can later</text>
+  <text x="840" y="638" font-size="12" fill="#475569">measure: did recalled memory change the plan, and did that improve the outcome? That measurement is a portfolio number.</text>
+  <text x="840" y="664" font-size="11" fill="#6D28D9" font-style="italic">Privacy: DELETE /memory/users/{id} wipes tier 3 for a user. Tier 2 audit rows are retained; tier 1 is already gone.</text>
+
+  <!-- Sample record -->
+  <rect x="40" y="710" width="1520" height="160" rx="12" fill="#0F172A"/>
+  <text x="60" y="738" font-size="12" font-weight="700" fill="#94A3B8">A TIER-3 MEMORY RECORD LOOKS LIKE THIS</text>
+  <text x="60" y="764" font-size="12" fill="#E2E8F0" font-family="Consolas, monospace">{ "id": "mem_8f21", "user_id": "u_42", "task_type": "claims.summarise_lender_docs", "outcome": "success", "importance": 0.8,</text>
+  <text x="60" y="784" font-size="12" fill="#E2E8F0" font-family="Consolas, monospace">  "text": "For lender-document summaries this user wants the affordability-check finding first, then the timeline; the",</text>
+  <text x="60" y="804" font-size="12" fill="#E2E8F0" font-family="Consolas, monospace">          "database tool was faster than re-reading PDFs when the loan table already existed.",</text>
+  <text x="60" y="824" font-size="12" fill="#E2E8F0" font-family="Consolas, monospace">  "tools_used": ["db.query", "docs.read"], "created_at": "2026-09-03", "last_accessed": "2026-09-10", "access_count": 4,</text>
+  <text x="60" y="844" font-size="12" fill="#E2E8F0" font-family="Consolas, monospace">  "embedding": [0.0213, -0.118, ...] }</text>
+</svg>
