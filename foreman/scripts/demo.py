@@ -173,7 +173,7 @@ class Demo:
         )
         say()
         say(
-            f"Console: http://localhost:8501 (Tasks → pick {task_id[:8]}…) · Jaeger: http://localhost:16686"
+            f"App: http://localhost:3000/tasks?task={task_id} · Jaeger: http://localhost:16686"
         )
 
 

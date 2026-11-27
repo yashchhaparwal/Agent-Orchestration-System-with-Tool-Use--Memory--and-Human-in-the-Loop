@@ -14,10 +14,12 @@ Runs entirely on a laptop, on free model tiers ($0), against synthetic data. New
 
 ```bash
 cp .env.example .env      # fill in the free-provider keys (Mistral, Groq, Google AI Studio, tokenrouter.com)
-uv sync --dev             # Python 3.12 via uv; nothing else to install but Docker Desktop
-make dev-up               # Docker → compose → migrations → 5 MCP servers → worker → beat → API → console
+uv sync --dev             # Python 3.12 via uv; you also need Docker Desktop and Node.js
+make dev-up               # Docker → compose → migrations → 5 MCP servers → worker → beat → API → web app
 make demo                 # the showcase task end to end, printed step by step
 ```
+
+Development startup uses the hosted providers configured in `.env`; it does not start or contact Ollama.
 
 Optional: a paid model can sit at the front of the supervisor/specialist chains (currently
 Experiential Labs `gpt-6-astra`) — set its key and `ENABLE_PAID_PROVIDERS=true` in `.env`. While
@@ -29,7 +31,7 @@ stops the app processes. Without `make` on Windows, call the scripts directly:
 
 | URL | What |
 |---|---|
-| http://localhost:8501 | operator console: Approvals · Tasks · Outbox · Memory · Stats · Trace |
+| http://localhost:3000 | the web app (`frontend/`): Review Queue · Tasks · Traces · Outbox · Memory · Stats |
 | http://localhost:8000/docs | the API (`X-API-Key` from `.env`) |
 | http://localhost:16686 | Jaeger — every span of every task |
 
@@ -84,16 +86,20 @@ stored raw). The actions server has **no send path**: `send_email`, `create_cale
 in a throwaway container with no network, a read-only root, dropped capabilities and limits; the
 web tool refuses private addresses on every redirect hop. `docs/Architecture.md` §14 has the model.
 
-## The console
+## The web app
+
+A React app (Vite) in `frontend/`. Its dev server proxies `/api` to the API and adds `X-API-Key`
+from `.env`, so the key never reaches browser code. It listens on 127.0.0.1 only and has no login:
+do not expose port 3000.
 
 | Page | Use it to |
 |---|---|
-| Approvals | see the context package (request, plan progress, done so far, the exact proposed action) and decide |
+| Review Queue | see the context package (request, plan progress, done so far, the exact proposed action) and decide |
 | Tasks | submit; follow a task live (subtasks *waiting / in progress / accepted*, verdicts, deliverable, approvals) |
 | Outbox | everything the agents *proposed* to send — nothing here was sent |
 | Memory | a user's lessons, their fading importance, delete-all |
 | Stats | tasks, completion, escalation and approval rates, tool mix, latency, **unapproved destructive actions (must be 0)**, the last eval headline |
-| Trace | one task as a span tree (from Jaeger), a span inspector, checkpoints, **replay from a checkpoint**, replay diff |
+| Traces | one task as execution steps and a span tree (from Jaeger), a span inspector, **replay from a checkpoint**, replay diff |
 
 ## Evals and replay
 
@@ -176,7 +182,7 @@ Per-phase build log, live results and lessons: [`docs/Memory.md`](docs/Memory.md
 
 ```
 apps/api            FastAPI: routes → controllers → services (the only HTTP layer)
-apps/review_ui      Streamlit console (pages/, components/, api_client.py)
+frontend            React web app (src/pages, src/components, src/api)
 packages/orchestrator
   graph/            build_graph, state, edges, nodes/ (one file per node), serde (checkpoint allowlist)
   agents/           supervisor, research, analysis, writing, code_exec, reviewer, memory_extractor (prompt.md each)

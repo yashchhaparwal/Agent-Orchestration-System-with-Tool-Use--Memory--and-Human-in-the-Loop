@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base resets ─────────────────────────────────────────── */
+@layer base {
+  * {
+    @apply border-white/10;
+  }
+  body {
+    @apply bg-surface-950 text-slate-100 font-sans;
+    background-image: theme('backgroundImage.mesh-dark');
+    background-attachment: fixed;
+  }
+  ::-webkit-scrollbar {
+    @apply w-1.5 h-1.5;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-surface-900;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-500 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-brand-600;
+  }
+}
+
+/* ── Component utilities ─────────────────────────────────── */
+@layer components {
+  /* Glass card */
+  .glass {
+    @apply bg-surface-800/60 backdrop-blur-xl border border-white/[0.06]
+           rounded-xl shadow-card;
+  }
+  .glass-hover {
+    @apply glass transition-all duration-200
+           hover:bg-surface-700/60 hover:shadow-card-hover hover:border-white/10;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
+           bg-brand-600 text-white
+           hover:bg-brand-500 active:bg-brand-700
+           transition-colors duration-150
+           focus:outline-none focus:ring-2 focus:ring-brand-500/50;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
+           text-slate-300 hover:text-white hover:bg-white/[0.06]
+           transition-colors duration-150
+           focus:outline-none focus:ring-2 focus:ring-white/20;
+  }
+  .btn-danger {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
+           bg-danger-500/20 text-danger-400 border border-danger-500/30
+           hover:bg-danger-500/30
+           transition-colors duration-150;
+  }
+  .btn-success {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
+           bg-success-500/20 text-success-400 border border-success-500/30
+           hover:bg-success-500/30
+           transition-colors duration-150;
+  }
+
+  /* Input */
+  .input {
+    @apply w-full px-3 py-2 rounded-lg text-sm
+           bg-surface-700/80 border border-white/10
+           text-slate-100 placeholder-slate-500
+           focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50
+           transition duration-150;
+  }
+
+  /* Code block */
+  .code-block {
+    @apply font-mono text-xs bg-black/40 rounded-lg p-4
+           border border-white/5 overflow-x-auto;
+  }
+
+  /* Stat card */
+  .stat-card {
+    @apply glass p-5 flex flex-col gap-1;
+  }
+
+  /* Section label */
+  .label {
+    @apply text-xs font-semibold uppercase tracking-widest text-slate-500;
+  }
+
+  /* Shimmer skeleton */
+  .skeleton {
+    @apply rounded-lg bg-surface-700/50 animate-shimmer;
+    background-image: linear-gradient(
+      90deg,
+      theme('colors.surface.700 / 50%') 0%,
+      theme('colors.surface.600 / 50%') 50%,
+      theme('colors.surface.700 / 50%') 100%
+    );
+    background-size: 200% 100%;
+  }
+}

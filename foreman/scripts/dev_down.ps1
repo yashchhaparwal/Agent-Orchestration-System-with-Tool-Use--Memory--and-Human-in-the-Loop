@@ -10,7 +10,7 @@ if (Test-Path $pidFile) {
     }
     Remove-Item $pidFile
 }
-foreach ($port in 7001, 7002, 7003, 7004, 7005, 8000, 8501) {
+foreach ($port in 3000, 7001,7002, 7003, 7004, 7005, 8000) {
     $owners = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue |
         Select-Object -ExpandProperty OwningProcess -Unique
     foreach ($o in $owners) { Stop-Process -Id $o -Force -ErrorAction SilentlyContinue }

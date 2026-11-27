@@ -33,15 +33,17 @@ echo "4/6 worker + beat"
 start worker uv run celery -A packages.orchestrator.worker worker -l info
 start beat uv run celery -A packages.orchestrator.worker beat -l info
 
-echo "5/6 api + console"
+echo "5/6 api + web app"
 start api uv run uvicorn apps.api.main:create_app --factory --port 8000
-start ui uv run streamlit run apps/review_ui/app.py --server.port 8501 --server.headless true
-wait_for "api" curl -sf http://localhost:8000/health
-wait_for "console" curl -sf http://localhost:8501/healthz
+wait_for "api" curl -sf http://127.0.0.1:8000/health
+[ -d frontend/node_modules ] || npm ci --prefix frontend --no-audit --no-fund
+# vite must run from inside frontend/ (tailwind resolves its content paths from the working directory)
+(cd frontend && start_dir=.. && nohup node node_modules/vite/bin/vite.js > "$start_dir/.run/logs/web.out.log" 2> "$start_dir/.run/logs/web.err.log" & echo $! > ../.run/web.pid)
+wait_for "web app" curl -sf http://127.0.0.1:3000
 cat .run/*.pid > .run/pids.txt
 
 echo "6/6 up"
-echo "  console  http://localhost:8501"
+echo "  app      http://localhost:3000"
 echo "  api      http://localhost:8000/docs"
 echo "  jaeger   http://localhost:16686"
 echo "  stop     scripts/dev_down.sh"

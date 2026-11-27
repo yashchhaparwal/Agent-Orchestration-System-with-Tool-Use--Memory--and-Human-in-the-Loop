@@ -88,7 +88,7 @@ class Settings(BaseSettings):
     budgets_config_path: Path = Path("config/budgets.yaml")
 
     # --- ops ---
-    api_base_url: str = "http://localhost:8000"  # what the operator UI talks to
+    api_base_url: str = "http://localhost:8000"  # where the web app proxy and scripts reach the API
     api_key: str = ""
     slack_webhook_url: str = ""
     log_level: str = "INFO"
