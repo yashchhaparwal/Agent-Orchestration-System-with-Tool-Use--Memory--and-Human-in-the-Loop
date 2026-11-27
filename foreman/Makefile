@@ -77,8 +77,8 @@ worker:          ## run the Celery worker (solo pool works on Windows)
 beat:            ## run Celery beat: expires overdue approvals every minute (separate process; -B is not supported on Windows)
 	uv run celery -A packages.orchestrator.worker beat -l info
 
-ui:              ## run the operator console on :8501
-	uv run streamlit run apps/review_ui/app.py --server.port 8501 --server.headless true
+ui:              ## run the web app on :3000 (needs Node.js; the API must be up)
+	cd frontend && npm ci --no-audit --no-fund && npm run dev
 
 lint:
 	uv run ruff check .
@@ -89,7 +89,7 @@ fmt:
 typecheck:
 	uv run mypy
 
-dev-up:          ## everything in one go: docker, compose, migrations, 5 MCP servers, worker, beat, API, console
+dev-up:          ## everything in one go: docker, compose, migrations, 5 MCP servers, worker, beat, API, web app
 	powershell -ExecutionPolicy Bypass -File scripts/dev_up.ps1
 
 dev-down:        ## stop the app processes started by dev-up (docker services stay)

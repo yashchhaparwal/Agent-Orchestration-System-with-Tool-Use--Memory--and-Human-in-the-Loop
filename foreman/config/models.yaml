@@ -90,7 +90,6 @@ roles:
     effort: low
   embedding:
     chain:
-      - {provider: ollama,  model: nomic-embed-text}
       - {provider: gemini,  model: gemini-embedding-2}
 
 dev:

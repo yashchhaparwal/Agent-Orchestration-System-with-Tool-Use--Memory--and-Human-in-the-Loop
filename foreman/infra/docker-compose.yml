@@ -21,7 +21,7 @@ services:
       POSTGRES_USER: foreman
       POSTGRES_PASSWORD: foreman
       POSTGRES_DB: foreman
-    ports: ["5432:5432"]
+    ports: ["${FOREMAN_POSTGRES_PORT:-5432}:5432"]
     volumes:
       - pgdata:/var/lib/postgresql/data
       # Creates the SELECT-only user the database MCP server will use (least privilege).
@@ -41,13 +41,6 @@ services:
       IS_PERSISTENT: "TRUE"
       ANONYMIZED_TELEMETRY: "FALSE"
 
-  ollama:
-    image: ollama/ollama:latest
-    ports: ["11434:11434"]
-    volumes:
-      - ollamadata:/root/.ollama
-    # CPU only. After first start:  docker exec foreman-ollama-1 ollama pull nomic-embed-text
-
   # Jaeger all-in-one accepts OTLP directly (4317 gRPC / 4318 HTTP) and serves the trace UI on 16686.
   # One container instead of otel-collector + Langfuse (+ ClickHouse + MinIO). Langfuse can be added later as a profile.
   jaeger:
@@ -58,6 +51,14 @@ services:
       - "16686:16686"
       - "4317:4317"
       - "4318:4318"
+
+  # Optional local model service. The default development stack uses hosted model providers instead.
+  ollama:
+    profiles: ["ollama"]
+    image: ollama/ollama:latest
+    ports: ["11434:11434"]
+    volumes:
+      - ollamadata:/root/.ollama
 
   # ---- MCP servers (profile "tools"). In development run them locally with `make mcp-db` /
   # `make mcp-files`; the containers exist so the stack can be brought up without a venv:

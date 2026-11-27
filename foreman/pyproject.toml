@@ -36,8 +36,7 @@ dependencies = [
     "opentelemetry-exporter-otlp>=1.27",
     "structlog>=24.1",
     "httpx>=0.27",
-    # operator ui (v1)
-    "streamlit>=1.38",
+    # tool argument validation
     "jsonschema>=4.26.0",
 ]
 
@@ -96,7 +95,6 @@ known-first-party = ["apps", "packages", "infra", "tests", "scripts"]
 "infra/seed/generate.py" = ["E501"]
 "tests/**" = ["E501"]
 "scripts/**" = ["E501"]
-"apps/review_ui/pages/*.py" = ["N999"]  # Streamlit orders pages by the numeric prefix
 
 [tool.mypy]
 python_version = "3.12"
